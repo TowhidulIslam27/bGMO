@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use bGMO data or code, please cite it as below."
+title: "Bangladesh Ground Motion Observatory (bGMO): PS-InSAR ground motion for the cities of Bangladesh"
+version: "1.0"
+date-released: "2026-10-12"
+authors:
+  - name: "SAR.Sense Geointelligence Lab"
+url: "https://bmgo.sarsense.com"
+repository-code: "https://github.com/TowhidulIslam27/bGMO"
+license: MIT
+keywords:
+  - InSAR
+  - PS-InSAR
+  - Sentinel-1
+  - land subsidence
+  - ground motion
+  - Bangladesh
+abstract: >-
+  Interactive map and processing code for PS-InSAR ground motion in Dhaka,
+  Chattogram, Khulna, Barishal, Sylhet and Cumilla from Sentinel-1 (2016-2024),
+  with line-of-sight velocities and time series for ascending and descending
+  tracks, and a combined vertical and east-west product on a 100 m grid.
+  Contains modified Copernicus Sentinel-1 data (2016-2024).

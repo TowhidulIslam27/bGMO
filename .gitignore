@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
+# raw StaMPS exports are kept outside the repository
+Results/
+TS_txt/
+TS_vertical/

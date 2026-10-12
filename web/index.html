@@ -1,0 +1,1196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#07140f">
+<meta property="og:title" content="Bangladesh Ground Motion Observatory (bGMO)">
+<meta property="og:description" content="PS-InSAR ground-motion velocities and displacement time series for the cities of Bangladesh, from Sentinel-1.">
+<meta property="og:image" content="assets/bgmo-logo.png">
+<link rel="icon" type="image/png" href="assets/bgmo-icon.png">
+
+<title>Bangladesh Ground Motion Observatory</title>
+<meta name="description" content="Bangladesh Ground Motion Observatory (bGMO): PS-InSAR ground-motion velocities and displacement time series for Bangladesh cities.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: instrument console in forest green. Control rail left (name block, country > city navigation),
+   full-bleed map, time-series card docked bottom-right of the map. Stacks on phones. Dark-first, with a light survey-sheet theme. */
+:root{
+  --bg:#08150F; --panel:#0D1F16; --raise:#132C20; --line:#1E3B2C; --fg:#E2EEE6; --muted:#94AE9F; --faint:#5F7C6C;
+  --accent:#86D1A4; --accent-ink:#06130C; --map:#0A1B13; --sel:#FFFFFF; --bound:#A6E3BD; --shadow:rgb(0 0 0 / .4);
+  --v-n2:#EF4A3C; --v-n1:#F39B6E; --v-0:#AEB6AC; --v-p1:#8FC1E3; --v-p2:#3E8FD8;
+  --s1:#B5862A; --s2:#249E8F; --s3:#9B6BDB;
+  --f-display:"Saira Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  --r:6px; color-scheme:dark;
+}
+@media (prefers-color-scheme: light){ :root:not([data-theme="dark"]){
+  --bg:#EEF2EC; --panel:#FAFCF8; --raise:#E3EBE3; --line:#C9D7CC; --fg:#11261A; --muted:#4C6555; --faint:#7D9384;
+  --accent:#1E7A4A; --accent-ink:#FFFFFF; --map:#DDE5DC; --sel:#0B1A11; --bound:#22784A; --shadow:rgb(20 40 28 / .18);
+  --v-n2:#D7301F; --v-n1:#F08A5A; --v-0:#9AA59B; --v-p1:#6BAED6; --v-p2:#2166AC;
+  --s1:#9A6B12; --s2:#127A6E; --s3:#7A47C2; color-scheme:light }}
+:root[data-theme="light"]{
+  --bg:#EEF2EC; --panel:#FAFCF8; --raise:#E3EBE3; --line:#C9D7CC; --fg:#11261A; --muted:#4C6555; --faint:#7D9384;
+  --accent:#1E7A4A; --accent-ink:#FFFFFF; --map:#DDE5DC; --sel:#0B1A11; --bound:#22784A; --shadow:rgb(20 40 28 / .18);
+  --v-n2:#D7301F; --v-n1:#F08A5A; --v-0:#9AA59B; --v-p1:#6BAED6; --v-p2:#2166AC;
+  --s1:#9A6B12; --s2:#127A6E; --s3:#7A47C2; color-scheme:light }
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font:14px/1.45 var(--f-body)}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.shell{display:grid;grid-template-rows:auto minmax(0,1fr) auto;height:100%;min-height:0}
+.app{display:grid;grid-template-columns:var(--sidew,340px) 7px minmax(0,1fr);min-height:0}
+.app.collapsed{grid-template-columns:0 0 minmax(0,1fr)}
+.app.collapsed .side{visibility:hidden;padding:0;border:0;overflow:hidden}
+.app.collapsed .resizer{pointer-events:none}
+.resizer{position:relative;cursor:col-resize;background:var(--panel);border-right:1px solid var(--line);touch-action:none}
+.resizer::after{content:"";position:absolute;top:50%;left:2px;width:3px;height:36px;margin-top:-18px;border-radius:2px;background:var(--faint);opacity:.55}
+.resizer:hover::after,.resizer.drag::after,.resizer:focus-visible::after{background:var(--accent);opacity:1}
+body.resizing{cursor:col-resize;user-select:none}
+.topbar{display:flex;align-items:center;gap:14px;padding:8px 16px;background:var(--bg);border-bottom:1px solid var(--line);min-width:0}
+.navtoggle{flex:none;display:grid;place-items:center;width:34px;height:34px;border:1px solid var(--line);border-radius:var(--r);background:transparent;cursor:pointer;color:var(--fg)}
+.navtoggle:hover{border-color:var(--accent)}
+.brandmark{display:flex;align-items:center;gap:12px;min-width:0;text-decoration:none;color:inherit}
+.brandmark img{display:block;height:30px;width:auto;flex:none}
+.bname{margin:0;display:flex;flex-direction:column;gap:2px;min-width:0}
+.bname b{font:700 21px/1 var(--f-display);letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bname small{font:500 11px/1.2 var(--f-mono);color:var(--muted);letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar .release{margin:0 0 0 auto;flex:none}
+.sitefoot{display:grid;grid-template-columns:1fr auto 1fr;align-items:start;gap:0 24px;padding:8px 20px 6px;background:var(--bg);border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+.sitefoot p{margin:0}
+.sitefoot .f-left{grid-column:1;grid-row:1}
+.sitefoot .f-logo{grid-column:2;grid-row:2;justify-self:center;display:block;line-height:0;margin:-6px 0 0}
+.sitefoot .f-logo img{height:38px;width:auto}
+.sitefoot .f-mid{grid-column:2;grid-row:3;justify-self:center;font-size:11.5px;letter-spacing:.02em;white-space:nowrap}
+.sitefoot .logo-lt{display:none}
+@media (prefers-color-scheme: light){ :root:not([data-theme="dark"]) .sitefoot .logo-lt{display:block} :root:not([data-theme="dark"]) .sitefoot .logo-dk{display:none} }
+:root[data-theme="light"] .sitefoot .logo-lt{display:block}
+:root[data-theme="light"] .sitefoot .logo-dk{display:none}
+.sitefoot .f-mid span{color:var(--faint);margin:0 2px}
+.sitefoot .f-right{grid-column:3;grid-row:1;text-align:right}
+.sitefoot a.gh{color:var(--muted);text-decoration:none;white-space:nowrap}
+.sitefoot a.gh:hover{color:var(--accent);text-decoration:underline}
+.logo-lt{display:none!important}
+@media (prefers-color-scheme: light){ :root:not([data-theme="dark"]) .logo-lt{display:block!important} :root:not([data-theme="dark"]) .logo-dk{display:none!important} }
+:root[data-theme="light"] .logo-lt{display:block!important}
+:root[data-theme="light"] .logo-dk{display:none!important}
+.side{background:var(--panel);border-right:1px solid var(--line);overflow-y:auto;display:flex;flex-direction:column;gap:20px;padding:18px 20px 28px}
+.brand{display:flex;flex-direction:column;gap:6px}
+.release{margin:4px 0 0;align-self:flex-start;font:500 11px/1.5 var(--f-mono);color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:3px 9px}
+#techsum td{font-family:var(--f-body);color:var(--fg)}
+#techsum td:first-child{color:var(--muted);white-space:nowrap}
+.release b{color:var(--fg);font-weight:500}
+.goto{display:flex;gap:6px}
+.goto input{flex:1;min-width:0;background:var(--bg);border:1px solid var(--line);border-radius:var(--r);padding:7px 10px;font:13px var(--f-mono)}
+.goto input::placeholder{color:var(--faint)}
+.goto button{border:1px solid var(--line);background:var(--raise);border-radius:var(--r);padding:6px 12px;cursor:pointer;font-size:13px}
+.goto button:hover{border-color:var(--accent)}
+.gotomsg{font-size:12px;color:var(--muted);margin:6px 0 0;min-height:1em}
+.prod{display:flex;flex-direction:column;gap:2px;padding:8px 0;border-top:1px dashed var(--line)}
+.prod:first-of-type{border-top:0}
+.prod b{font:600 15px/1.2 var(--f-display);letter-spacing:.03em;color:var(--fg)}
+.prod b small{font:500 10px var(--f-mono);letter-spacing:.06em;color:var(--accent-ink);background:var(--accent);border-radius:3px;padding:2px 5px;margin-left:6px;vertical-align:2px}
+.prod b small.plan{background:transparent;color:var(--muted);border:1px dashed var(--faint)}
+.road{list-style:none;padding:0;margin:8px 0 0;display:flex;flex-direction:column;gap:10px}
+.road li{display:grid;grid-template-columns:62px 1fr;gap:10px;margin:0}
+.road li span{font:500 11px/1.6 var(--f-mono);color:var(--accent);text-transform:uppercase;letter-spacing:.06em}
+.cite{font:12px/1.5 var(--f-mono);color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:var(--r);padding:8px 10px;user-select:all}
+.kicker{margin:0;font:600 13px/1 var(--f-mono);letter-spacing:.06em;color:var(--accent)}
+h1{font:700 32px/1 var(--f-display);letter-spacing:.01em;margin:0;text-wrap:balance}
+.lede{margin:6px 0 0;color:var(--muted);max-width:40ch}
+.lbl{font:500 11px/1 var(--f-body);letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.group{display:flex;flex-direction:column}
+
+.country{display:flex;gap:8px;align-items:center}
+.country select{flex:1;min-width:0;appearance:none;background:var(--bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%2394AE9F' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right 12px center;border:1px solid var(--line);border-radius:var(--r);padding:8px 32px 8px 12px;font:600 17px var(--f-display);letter-spacing:.03em;cursor:pointer}
+.country button{flex:none}
+.soon{font-size:11.5px;color:var(--faint);margin:6px 0 0}
+
+.cities{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.city{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:10px;padding:9px 12px;background:transparent;border:0;border-top:1px solid var(--line);text-align:left;cursor:pointer}
+.city:first-child{border-top:0}
+.city:hover{background:var(--raise)}
+.city[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.city[aria-pressed="true"] .cn{color:var(--accent-ink)}
+.city b{font:600 17px/1 var(--f-display);letter-spacing:.02em}
+.cn{font:400 12px var(--f-mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.trk{display:flex;gap:3px}
+.trk i{font:500 10px/1 var(--f-mono);font-style:normal;border:1px solid currentColor;border-radius:3px;padding:2px 4px;opacity:.75}
+.trk i.cs{border-style:dashed}
+
+.seg{display:flex;border:1px solid var(--line);border-radius:var(--r);padding:2px;gap:2px;background:var(--bg)}
+.seg button{flex:1;border:0;background:transparent;border-radius:4px;padding:6px 6px;cursor:pointer;font-size:13px;white-space:nowrap}
+.seg button:hover:not(:disabled){background:var(--raise)}
+.seg button[aria-pressed="true"]{background:var(--raise);box-shadow:0 0 0 1px var(--accent) inset;font-weight:600}
+.seg button:disabled{opacity:.38;cursor:not-allowed}
+
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin:0}
+.stat{background:var(--panel);padding:10px 12px;min-width:0}
+.stat dt{font-size:11px;color:var(--muted);letter-spacing:.02em}
+.stat dd{margin:2px 0 0;font:500 17px/1.2 var(--f-mono);font-variant-numeric:tabular-nums}
+.stat dd small{font-size:11px;color:var(--muted);font-weight:400}
+.stat.wide{grid-column:1/-1}
+
+.legend svg{display:block;width:100%;height:auto;overflow:visible}
+.legend text{fill:var(--muted);font:10.5px var(--f-mono)}
+.legnote{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:2px}
+.ctrls{display:flex;flex-direction:column;gap:12px}
+.row{display:flex;flex-direction:column;gap:6px}
+.row>span{font-size:12px;color:var(--muted)}
+
+details.about{border-top:1px solid var(--line);padding-top:16px}
+details.about+details.about{margin-top:-4px}
+details.about summary{cursor:pointer;font:600 15px var(--f-display);letter-spacing:.04em;text-transform:uppercase;list-style:none;display:flex;justify-content:space-between}
+details.about summary::-webkit-details-marker{display:none}
+details.about summary::after{content:"+";font-family:var(--f-mono)}
+details.about[open] summary::after{content:"–"}
+.about p,.about li{color:var(--muted);font-size:13px;max-width:62ch}
+.about ul{padding-left:18px;margin:10px 0}
+.about li{margin:4px 0}
+.about strong{color:var(--fg);font-weight:500}
+.bl svg{width:100%;height:auto;display:block}
+.blcity{margin-top:14px;padding-top:10px;border-top:1px dashed var(--line)}
+.blcity:first-child{border-top:0;padding-top:0}
+.blcity h4{margin:0;font:600 16px/1 var(--f-display);letter-spacing:.04em;color:var(--fg)}
+.blcity h4 small{font:400 11px var(--f-mono);color:var(--muted);letter-spacing:0;margin-left:6px}
+.blcity.cur h4{color:var(--accent)}
+.method{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+.method h3{margin:6px 0 0;font:600 14px/1.2 var(--f-body);color:var(--fg)}
+.method p{margin:0;line-height:1.6}
+.method .eq{font:400 13px/1.8 var(--f-body);color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:var(--r);padding:9px 10px;text-align:center;white-space:nowrap;overflow-x:auto}
+.method .eq i{font-style:italic}
+.method .eq .rows{display:inline-flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left}
+.frac{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;margin:0 2px}
+.frac>span:first-child{border-bottom:1px solid currentColor;padding:0 4px 1px}
+.frac>span:last-child{padding-top:1px}
+.method table{border-collapse:collapse;font-size:12px;width:100%}
+.method th,.method td{padding:5px 6px;border-bottom:1px solid var(--line);text-align:left;color:var(--muted)}
+.method th{font:500 10.5px var(--f-body);letter-spacing:.07em;text-transform:uppercase}
+.method td{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.method td:first-child{font-family:var(--f-body);color:var(--fg)}
+.mtbl{overflow-x:auto}
+.bl text{fill:var(--muted);font:10px var(--f-mono)}
+.foot{margin-top:auto;font-size:11.5px;color:var(--faint)}
+
+.stage{position:relative;min-width:0;min-height:0}
+.mapwrap{position:absolute;inset:0;background:var(--map)}
+#map{position:absolute;inset:0;background:var(--map)}
+#pts{position:absolute;left:0;top:0;pointer-events:none;transition:opacity .12s}
+.leaflet-pts-pane{pointer-events:none}
+.maptop{position:absolute;top:12px;left:56px;right:12px;z-index:900;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:8px;pointer-events:none}
+.crumbs{pointer-events:auto;display:flex;align-items:center;gap:2px;background:color-mix(in srgb,var(--panel) 92%,transparent);border:1px solid var(--line);border-radius:999px;padding:3px 6px;backdrop-filter:blur(6px);font-size:13px;min-width:0;flex-wrap:wrap}
+.crumbs button{border:0;background:transparent;border-radius:999px;padding:3px 8px;cursor:pointer;color:var(--accent);font-weight:500}
+.crumbs button:hover{background:var(--raise)}
+.crumbs span{padding:3px 6px;color:var(--fg);font-weight:600}
+.crumbs i{color:var(--faint);font-style:normal}
+.chip{pointer-events:auto;background:color-mix(in srgb,var(--panel) 92%,transparent);border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-size:12px;color:var(--muted);backdrop-filter:blur(6px)}
+.chip b{color:var(--fg);font-weight:600}
+.chips{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+#tip{position:absolute;z-index:950;pointer-events:none;background:var(--fg);color:var(--panel);font:500 11.5px var(--f-mono);padding:3px 7px;border-radius:4px;transform:translate(12px,-50%);white-space:nowrap;font-variant-numeric:tabular-nums}
+#loading{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:960;padding:6px 14px;border-radius:999px;border:1px solid var(--line);font:500 12px var(--f-mono);color:var(--fg);background:var(--panel);box-shadow:0 2px 10px rgba(0,0,0,.25);pointer-events:none;white-space:nowrap}
+
+/* green cast on the dark basemap so it sits inside the theme */
+.base-dark .leaflet-tile-pane{filter:sepia(.45) hue-rotate(82deg) saturate(1.6) brightness(.92)}
+.bpath{transition:fill-opacity .15s}
+.clabel{transform:translate(-50%,-50%);pointer-events:none;text-align:center;white-space:nowrap}
+.clabel b{display:block;font:600 15px/1 var(--f-display);letter-spacing:.04em;color:var(--fg);text-shadow:0 0 4px var(--map),0 0 8px var(--map)}
+.clabel span{display:inline-block;margin-top:3px;font:500 10.5px/1 var(--f-mono);color:var(--accent-ink);background:var(--accent);border-radius:3px;padding:2px 5px}
+.clabel span.cs{background:transparent;color:var(--muted);border:1px dashed var(--faint)}
+
+/* Card */
+.ts{position:absolute;right:16px;bottom:16px;z-index:1000;width:min(620px,calc(100% - 32px));max-height:calc(100% - 72px);overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 34px var(--shadow)}
+.ts-head{display:flex;gap:14px;align-items:flex-start;justify-content:space-between;padding:14px 16px 0}
+.pid{font:600 20px/1 var(--f-display);letter-spacing:.03em}
+.coord{font:400 12px var(--f-mono);color:var(--muted);margin-top:4px;user-select:all}
+.vel{text-align:right;flex:none}
+.vel .num{font:500 26px/1 var(--f-mono);font-variant-numeric:tabular-nums}
+.vel .unit{font-size:12px;color:var(--muted);margin-left:3px}
+.pill{display:inline-flex;align-items:center;gap:6px;margin-top:6px;font-size:11.5px;color:var(--fg);border:1px solid var(--line);border-radius:999px;padding:2px 9px 2px 6px}
+.pill i{width:9px;height:9px;border-radius:50%;display:inline-block}
+.facts{display:flex;flex-wrap:wrap;gap:4px 18px;padding:10px 16px 0;font-size:12px;color:var(--muted)}
+.facts b{font:500 12px var(--f-mono);color:var(--fg);font-variant-numeric:tabular-nums}
+.chart{position:relative;padding:6px 8px 0 4px}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart text{fill:var(--muted);font:10.5px var(--f-mono)}
+.chart .grid{stroke:var(--line);stroke-width:1}
+.chart .zero{stroke:var(--faint);stroke-width:1}
+.chart .fit{stroke:var(--fg);stroke-width:1.5;stroke-dasharray:5 4;fill:none;opacity:.8}
+.chart .xh{stroke:var(--faint);stroke-width:1}
+#ctip{position:absolute;pointer-events:none;background:var(--raise);border:1px solid var(--line);border-radius:5px;padding:6px 8px;font:11.5px var(--f-mono);white-space:nowrap;font-variant-numeric:tabular-nums;z-index:2}
+#ctip .d{color:var(--muted);margin-bottom:2px}
+#ctip i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
+.sleg{display:flex;flex-wrap:wrap;gap:6px;padding:0 16px}
+.sleg span{display:inline-flex;align-items:center;gap:6px;font:12px var(--f-mono);border:1px solid var(--line);border-radius:999px;padding:2px 4px 2px 8px}
+.sleg i{width:9px;height:9px;border-radius:50%}
+.sleg button{border:0;background:transparent;cursor:pointer;color:var(--muted);padding:0 4px;font-size:14px;line-height:1}
+.ts-actions{display:flex;flex-wrap:wrap;gap:8px;padding:10px 16px 14px;align-items:center}
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:var(--r);padding:6px 11px;font-size:13px;cursor:pointer}
+.btn:hover{background:var(--raise)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:500}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.toast{font-size:12px;color:var(--muted);margin-left:auto}
+.min{border:0;background:transparent;cursor:pointer;color:var(--muted);font:16px var(--f-mono);padding:0 0 0 6px}
+.ts.collapsed .chart,.ts.collapsed .facts,.ts.collapsed .sleg,.ts.collapsed .ts-actions,.ts.collapsed .tbl,.ts.collapsed .note{display:none}
+.ts.collapsed .ts-head{padding-bottom:14px}
+.sub{font-size:12.5px;color:var(--muted);margin-top:4px}
+.note{padding:10px 16px 16px;color:var(--muted);font-size:13px;max-width:60ch}
+.tbl{overflow-x:auto;padding:8px 8px 12px}
+.tbl table{width:100%;border-collapse:collapse;font-size:12.5px}
+.tbl th{font:500 10.5px var(--f-body);letter-spacing:.07em;text-transform:uppercase;color:var(--muted);text-align:right;padding:6px 8px;border-bottom:1px solid var(--line)}
+.tbl th:first-child,.tbl td:first-child{text-align:left}
+.tbl td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.tbl tr:last-child td{border-bottom:0}
+.tbl td:first-child{font:600 15px var(--f-display);letter-spacing:.03em}
+.tbl tbody tr{cursor:pointer}
+.tbl tbody tr:hover td{background:var(--raise)}
+.tbl .cs{color:var(--faint);font-family:var(--f-body);font-size:12px}
+.bar{display:inline-block;height:6px;border-radius:2px;background:var(--v-n2);vertical-align:middle;margin-right:6px}
+
+/* Leaflet essentials (stylesheet inlined) */
+.leaflet-pane,.leaflet-tile,.leaflet-marker-icon,.leaflet-tile-container,.leaflet-pane>svg,.leaflet-pane>canvas,.leaflet-zoom-box,.leaflet-image-layer,.leaflet-layer{position:absolute;left:0;top:0}
+.leaflet-container{overflow:hidden;-webkit-tap-highlight-color:transparent;touch-action:none;font-family:var(--f-body)}
+.leaflet-tile,.leaflet-marker-icon{user-select:none;-webkit-user-drag:none}
+.leaflet-container img.leaflet-tile{max-width:none!important;max-height:none!important;width:256px;height:256px;padding:0;border:0}
+.leaflet-tile{visibility:hidden}.leaflet-tile-loaded{visibility:inherit}
+.leaflet-pane{z-index:400}.leaflet-tile-pane{z-index:200}.leaflet-overlay-pane{z-index:400}.leaflet-marker-pane{z-index:600}.leaflet-tooltip-pane{z-index:650}.leaflet-popup-pane{z-index:700}
+.leaflet-overlay-pane svg{overflow:visible}
+.leaflet-zoom-animated{transform-origin:0 0}
+.leaflet-zoom-anim .leaflet-zoom-animated{transition:transform .25s cubic-bezier(0,0,.25,1)}
+.leaflet-zoom-anim .leaflet-tile,.leaflet-pan-anim .leaflet-tile{transition:none}
+.leaflet-zoom-anim .leaflet-zoom-hide{visibility:hidden}
+.leaflet-interactive{cursor:pointer}
+.leaflet-grab{cursor:grab}.leaflet-dragging .leaflet-grab{cursor:grabbing}
+.leaflet-container.hot{cursor:pointer}
+.leaflet-top,.leaflet-bottom{position:absolute;z-index:1000;pointer-events:none}
+.leaflet-top{top:0}.leaflet-right{right:0}.leaflet-bottom{bottom:0}.leaflet-left{left:0}
+.leaflet-control{position:relative;z-index:800;pointer-events:auto;float:left;clear:both}
+.leaflet-right .leaflet-control{float:right}
+.leaflet-top .leaflet-control{margin-top:12px}.leaflet-left .leaflet-control{margin-left:12px}
+.leaflet-control-zoom{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--panel)}
+.leaflet-control-zoom a{display:grid;place-items:center;width:32px;height:32px;color:var(--fg);text-decoration:none;font:500 18px var(--f-mono)}
+.leaflet-control-zoom a+a{border-top:1px solid var(--line)}
+.leaflet-control-zoom a:hover{background:var(--raise)}
+.leaflet-disabled{opacity:.4}
+.leaflet-control-attribution{background:color-mix(in srgb,var(--panel) 85%,transparent);color:var(--muted);font-size:10.5px;padding:1px 6px;border-radius:4px 0 0 0}
+.leaflet-control-attribution a{color:var(--muted)}
+
+@media (max-width:780px){
+  html,body{height:auto}
+  .shell{display:block;height:auto}
+  .app{display:flex;flex-direction:column;height:auto}
+  .app.collapsed .side{display:none}
+  .resizer{display:none}
+  .brandmark img{height:32px}
+  .bname b{font-size:17px;white-space:normal}
+  .bname small,.topbar .release{display:none}
+  .sitefoot{grid-template-columns:1fr;text-align:center}
+  .sitefoot .f-left,.sitefoot .f-logo,.sitefoot .f-mid,.sitefoot .f-right{grid-column:1;grid-row:auto;text-align:center;padding-top:0}
+  .side{order:2;border-right:0;border-top:1px solid var(--line);overflow:visible;padding:20px 16px 28px}
+  .stage{order:1;display:flex;flex-direction:column}
+  .mapwrap{position:relative;inset:auto;height:62svh;min-height:380px}
+  .ts{position:relative;right:auto;bottom:auto;width:auto;max-height:none;margin:12px 16px 0;box-shadow:none}
+  .chips{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+
+<div class="shell">
+<header class="topbar">
+  <button class="navtoggle" id="navtoggle" type="button" aria-controls="side" aria-expanded="true" aria-label="Hide side panel" title="Hide side panel">
+    <svg width="16" height="14" viewBox="0 0 16 14" aria-hidden="true"><path d="M1 1h14M1 7h14M1 13h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg>
+  </button>
+  <a class="brandmark" href="#bangladesh" id="home" aria-label="Bangladesh Ground Motion Observatory, overview">
+    <img src="assets/bgmo-logo.png" alt="bGMO" width="279" height="76">
+    <h1 class="bname"><b>Bangladesh Ground Motion Observatory</b></h1>
+  </a>
+  <p class="release" title="Current data release"><b>Release 1.0</b> · Oct 2026</p>
+</header>
+<div class="app" id="app">
+  <aside class="side" id="side" aria-label="Controls">
+    <div>
+      <div class="brand">
+        <p class="lede">PS‑InSAR ground motion for the cities of Bangladesh. Choose a city and a product, then click any point to see its displacement history.</p>
+      </div>
+    </div>
+
+    <div class="group">
+      <p class="lbl" id="city-lbl">Cities</p>
+      <div class="cities" id="cities" role="group" aria-labelledby="city-lbl"></div>
+    </div>
+
+    <div class="group">
+      <p class="lbl"><label for="goto-in">Go to coordinates</label></p>
+      <form class="goto" id="goto" autocomplete="off"><input id="goto-in" inputmode="decimal" placeholder="23.7806, 90.4074" aria-describedby="gotomsg"><button type="submit">Go</button></form>
+      <p class="gotomsg" id="gotomsg"></p>
+    </div>
+
+    <div class="group">
+      <p class="lbl" id="trk-lbl">Product</p>
+      <div class="seg" id="tracks" role="group" aria-labelledby="trk-lbl">
+        <button id="trk-asc" data-t="asc">Ascending</button>
+        <button id="trk-dsc" data-t="dsc">Descending</button>
+        <button id="trk-ort" data-t="ortho" title="Ascending and descending combined on a 100 m grid">Ortho</button>
+      </div>
+    </div>
+
+    <div class="group">
+      <p class="lbl" id="ms-lbl">Show</p>
+      <div class="seg" id="measure" role="group" aria-labelledby="ms-lbl">
+        <button id="ms-los" data-v="los">LOS velocity</button>
+        <button id="ms-vert" data-v="vert" title="Choose Ortho first">Vertical</button>
+        <button id="ms-ew" data-v="ew" title="Choose Ortho first">East–west</button>
+      </div>
+      <p class="soon" id="msnote"></p>
+    </div>
+
+    <div class="group">
+      <p class="lbl" id="sumlbl">Summary</p>
+      <dl class="stats" id="stats"></dl>
+    </div>
+
+    <div class="group legend">
+      <p class="lbl" id="leglbl">LOS velocity, mm/yr</p>
+      <div id="hist"></div>
+      <div class="legnote"><span id="legL">← away from satellite (subsidence)</span><span id="legR">toward →</span></div>
+    </div>
+
+    <div class="ctrls">
+      <div class="row"><span>Color range</span>
+        <div class="seg" id="clamp" role="group" aria-label="Color range">
+          <button id="cl-3" data-v="3">±3</button><button id="cl-5" data-v="5">±5</button><button id="cl-8" data-v="8">±8</button><button id="cl-12" data-v="12">±12</button>
+        </div></div>
+      <div class="row"><span>Show points</span>
+        <div class="seg" id="filter" role="group" aria-label="Point filter">
+          <button id="f-all" data-v="all">All</button><button id="f-2" data-v="-2">≤ −2</button><button id="f-5" data-v="-5">≤ −5 mm/yr</button>
+        </div></div>
+    </div>
+
+    <details class="about" id="products">
+      <summary>Products</summary>
+      <div class="method">
+        <p>Each city is offered as the raw radar measurement from each track, and as ground motion split into its vertical and east–west parts.</p>
+        <div class="prod"><b>bGMO Basic<small>LIVE</small></b><p>Every persistent scatterer with its line‑of‑sight velocity and full time series, kept separate for the ascending and descending tracks. Choose Ascending or Descending, then LOS velocity.</p></div>
+        <!-- single-track vertical retired: vertical and east-west come only from Ortho -->
+        <div class="prod"><b>bGMO Ortho<small>LIVE</small></b><p>Ascending and descending points combined on a 100 m grid and solved for vertical and east–west motion, with a 12‑day time series for each cell. It only covers ground seen from both sides, about 29,000 cells across the six cities. Choose Ortho, then Vertical or East–west. These two views are only available in Ortho.</p></div>
+        <div class="prod"><b>bGMO Calibrated<small class="plan">PLANNED</small></b><p>Each stack tied to GNSS station velocities, so the rates become absolute and can be compared fairly from one city to the next.</p></div>
+      </div>
+    </details>
+
+    <details class="about" id="techsum">
+      <summary>Technical summary</summary>
+      <div class="method"><div class="mtbl"><table><tbody>
+        <tr><td>Satellite</td><td>Sentinel‑1A, C‑band SAR (5.405 GHz)</td></tr>
+        <tr><td>Mode</td><td>Interferometric Wide swath, SLC</td></tr>
+        <tr><td>Tracks</td><td>Ascending paths 114 and 41; descending paths 150 and 77</td></tr>
+        <tr><td>Period</td><td>May 2016 to May 2024, varying by city</td></tr>
+        <tr><td>Scenes</td><td>151 to 218 per stack, 12‑day repeat</td></tr>
+        <tr><td>Processing</td><td>Persistent scatterer interferometry (StaMPS), single master</td></tr>
+        <tr><td>Resolution cell</td><td>About 5 × 22 m, ground range × azimuth</td></tr>
+        <tr><td>Points</td><td id="ts-points">275,198 PS in 12 stacks</td></tr>
+        <tr><td>Ortho grid</td><td id="ts-ortho">100 m cells, 12‑day time step</td></tr>
+        <tr><td>Reference</td><td>Local reference area per stack; Ortho tracks tied to shared ground</td></tr>
+        <tr><td>Coordinates</td><td>WGS 84 (EPSG:4326)</td></tr>
+        <tr><td>Updates</td><td>Yearly, with the two latest releases kept online</td></tr>
+        <tr><td>Release</td><td>1.0, October 2026</td></tr>
+      </tbody></table></div></div>
+    </details>
+
+    <details class="about" id="apps">
+      <summary>Applications</summary>
+      <div class="method">
+        <h3>Who can use it</h3>
+        <p><strong>Planning and building control.</strong> Before approving new construction, check whether the site sits on ground that has been sinking, and how fast.</p>
+        <p><strong>Infrastructure.</strong> Bridges, flyovers, metro lines, railways and embankments can be watched for uneven settlement. A difference across a structure matters more than the whole area sinking together.</p>
+        <p><strong>Groundwater.</strong> A broad bowl of subsidence across part of a city often points to heavy pumping from the aquifer below. Comparing the map with well records helps tell this apart from other causes.</p>
+        <p><strong>Coasts and flooding.</strong> In Khulna and Barishal, every millimetre of sinking adds to relative sea‑level rise and makes drainage and embankment design harder.</p>
+        <p><strong>Hill slopes.</strong> In Chattogram and Sylhet, small movements on cut slopes can mark places worth inspecting for landslide risk.</p>
+        <p><strong>Research and teaching.</strong> Every point and cell carries its full time series, which can be copied as CSV.</p>
+        <h3>What the Ortho layer shows</h3>
+        <div class="mtbl"><table><thead><tr><th>City</th><th>Cells</th><th>Median vert.</th><th>5th pct.</th><th>≤ −5 mm/yr</th><th>E–W 5th / 95th</th></tr></thead><tbody id="approws"></tbody></table></div>
+        <p>Rates in mm/yr, relative to each city's own reference ground. East–west is positive towards the east; the last column shows the spread between the 5th and 95th percentile cell. Click a row to open that city in Ortho.</p>
+      </div>
+    </details>
+
+    <details class="about" id="about">
+      <summary>About the data</summary>
+      <ul>
+        <li>Each dot is a <strong>persistent scatterer</strong>: a stable radar reflector such as a rooftop, wall or paved surface, measured on every acquisition.</li>
+        <li><strong>LOS velocity</strong> is the yearly rate of motion along the radar line of sight, in mm/yr. Negative values mean the ground moved away from the satellite, which usually indicates subsidence.</li>
+        <li><strong>Vertical</strong> and <strong>east–west</strong> movement come from the Ortho product, which combines the ascending and descending tracks. Choose Ortho to see them. Negative vertical values mean sinking; positive east–west values mean moving east.</li>
+        <li>Values are <strong>relative</strong> to each dataset's reference area, not absolute.</li>
+        <li><strong>Ascending</strong> (evening, looking east) and <strong>descending</strong> (dawn, looking west) passes view the ground from opposite sides, so their LOS velocities can differ where there is horizontal motion.</li>
+        <li>The dashed line in each time series is the least‑squares linear trend. RMSE is the scatter of the measurements around it.</li>
+        <li><strong>City extents</strong> used to frame each city come from administrative units: metropolitan police thanas for Dhaka, Chattogram and Khulna, and the Sadar upazila for Barishal, Sylhet and Cumilla. Source: geoBoundaries (CC BY 4.0), BBS / OCHA.</li>
+      </ul>
+      <p class="lbl" style="margin-top:14px">Perpendicular baselines, all cities</p>
+      <p style="margin:0">Each dot is one scene, placed by its date and by its orbital distance from the master (green). The selected city is listed first.</p>
+      <div class="bl" id="bl"></div>
+    </details>
+
+    <details class="about" id="method">
+      <summary>Methodology</summary>
+      <div class="method">
+        <h3>Images</h3>
+        <p>The analysis uses Sentinel‑1A radar images taken in Interferometric Wide swath mode and delivered as single look complex (SLC) products. Each city was processed twice, once from each viewing direction. The ascending images were taken at about six in the evening local time, with the satellite looking east. The descending images were taken a little before six in the morning, looking west.</p>
+        <div class="mtbl"><table>
+          <thead><tr><th>City</th><th>Asc path</th><th>Dsc path</th><th>Scenes</th></tr></thead>
+          <tbody id="mrows"></tbody>
+        </table></div>
+        <p>Depending on the city, the stacks start between 2016 and 2018 and run to 2023 or 2024.</p>
+
+        <h3>Finding stable points</h3>
+        <p>For every stack we picked one master image from the middle years and formed an interferogram between it and each of the other dates. The baseline plots under About the data show that arrangement. Persistent scatterers were then selected with StaMPS. These are points whose radar return stays steady over the whole period, mostly rooftops, walls and paved ground. That is why the dots crowd the built‑up core of each city and thin out over fields, rivers and trees.</p>
+
+        <h3>What the radar sees</h3>
+        <p>The satellite measures how the distance between itself and the ground changes. That distance runs along its line of sight (LOS), which is tilted between roughly 31° and 46° from the vertical, depending on where the city falls across the 250 km swath. This is the LOS velocity on the map. A negative value means the point moved away from the satellite.</p>
+
+        <h3>Incidence angle</h3>
+        <p>The incidence angle θ, the tilt of the line of sight from the vertical, was worked out for every point from the footprint of the Sentinel‑1 frame it falls in and its distance across that frame. It should be correct to about one degree, which shifts the derived vertical and east–west values by one or two percent. The angle is shown on each point's card, and it is what lets the two tracks be combined below.</p>
+        <p>As a first check we divided each track's LOS rate by cos θ, as if all motion were vertical, and compared the two tracks where they overlap. In Dhaka, Khulna, Sylhet and Barishal they agreed to within about 0.3 mm/yr. In Chattogram the ascending track read 1.8 mm/yr higher, and in Cumilla 4.3 mm/yr lower, than the descending track. Differences like these are why vertical and east–west motion are only offered through Ortho, where both tracks are tied to the same ground and solved together.</p>
+
+        <h3>Combining the two tracks (Ortho)</h3>
+        <p>Each track sees the ground from one side, so a single track cannot separate sinking from sideways movement. Seen from both sides, the two can be pulled apart. We laid a 100 m grid over each city and kept the cells that hold points from both tracks. In each cell we averaged the points of each track and moved both onto a shared 12‑day timeline by linear interpolation, over the period that both tracks cover.</p>
+        <p>Before combining, the two tracks have to describe the same ground. Each stack was processed with its own reference area, so we removed from each track its median velocity v<sub>ref</sub> over the shared cells, counted from that track's master date t<sub>m</sub>:</p>
+        <p class="eq"><i>d′</i>(<i>t</i>) = <i>d</i>(<i>t</i>) − <i>v</i><sub>ref</sub> (<i>t</i> − <i>t</i><sub>m</sub>)</p>
+        <p>This treats the typical ground of each city as the common zero. In Cumilla the two stacks differed by more than 3 mm/yr before this step.</p>
+
+        <h3>How a movement shows up in each track</h3>
+        <p>The satellite only sees the part of a movement that lies along its line of sight. If a point moves up by d<sub>U</sub>, east by d<sub>E</sub> and north by d<sub>N</sub>, the change along the line of sight is</p>
+        <p class="eq"><i>d</i><sub>LOS</sub> = <i>d</i><sub>U</sub> cos θ − sin θ (<i>d</i><sub>E</sub> cos α − <i>d</i><sub>N</sub> sin α)</p>
+        <p>Here θ is the incidence angle and α is the direction the satellite flies, measured clockwise from north. A positive value means the point moved towards the satellite. Sentinel‑1 flies close to north–south, at about −11° on the ascending passes and 191° on the descending ones, so sin α is small and the north–south term hardly registers. We leave it out, which leaves two unknowns and one equation from each track:</p>
+        <p class="eq"><span class="rows"><span><i>d</i><sub>asc</sub> = <i>d</i><sub>U</sub> cos θ<sub>a</sub> − <i>d</i><sub>E</sub> sin θ<sub>a</sub> cos α<sub>a</sub></span><span><i>d</i><sub>dsc</sub> = <i>d</i><sub>U</sub> cos θ<sub>d</sub> − <i>d</i><sub>E</sub> sin θ<sub>d</sub> cos α<sub>d</sub></span></span></p>
+        <p>On the ascending track cos α is close to +1, and on the descending track it is close to −1. So when the ground moves east, the ascending reading drops and the descending reading rises by about the same amount, while sinking lowers both. That difference is what lets the two movements be told apart. Solving the pair gives</p>
+        <p class="eq"><span class="rows"><span><i>D</i> = sin θ<sub>a</sub> cos θ<sub>d</sub> cos α<sub>a</sub></span><span>&emsp;&ensp;− cos θ<sub>a</sub> sin θ<sub>d</sub> cos α<sub>d</sub></span></span></p>
+        <p class="eq"><i>d</i><sub>E</sub> = <span class="frac"><span>cos θ<sub>a</sub> <i>d</i><sub>dsc</sub> − cos θ<sub>d</sub> <i>d</i><sub>asc</sub></span><span><i>D</i></span></span></p>
+        <p class="eq"><i>d</i><sub>U</sub> = <span class="frac"><span>sin θ<sub>a</sub> cos α<sub>a</sub> <i>d</i><sub>dsc</sub> − sin θ<sub>d</sub> cos α<sub>d</sub> <i>d</i><sub>asc</sub></span><span><i>D</i></span></span></p>
+        <p>We solve this for every cell on every 12‑day date, using the mean incidence angle of each track's points in that cell. East–west motion is positive towards the east. The east–west and vertical rates on the map are the slopes of straight lines fitted through the two resulting series.</p>
+        <p>As an example, in central Dhaka θ<sub>a</sub> is about 39° and θ<sub>d</sub> about 36°. Then D ≈ 0.95 and d<sub>E</sub> ≈ 0.82 d<sub>dsc</sub> − 0.85 d<sub>asc</sub>. A cell where the descending track reads 2 mm/yr more than the ascending track is therefore moving roughly 1.6 mm/yr to the east.</p>
+        <p>The estimate is only as steady as the points behind it. Cells built from one or two points per track are noisier than cells with many, so each cell's card shows how many ascending and descending points it holds. North–south motion is not measured at all and is assumed to be small.</p>
+
+        <h3>Rates and time series</h3>
+        <p>Every rate on the map is a straight line fitted through the full time series, with the master date fixed at zero. All values are relative to the reference area chosen for their own stack. They describe how a point moved compared with the ground around it. Tying them to GNSS stations would be needed before reading them as absolute rates or comparing one city with another.</p>
+      </div>
+    </details>
+    <details class="about" id="roadmap">
+      <summary>Roadmap</summary>
+      <div class="method"><ul class="road">
+        <li><span>Now</span><p>Release 1.0. Six cities, LOS velocity for both tracks, and the Ortho vertical and east–west product.</p></li>
+        <li><span>Next</span><p>Quality measures for every point, such as temporal coherence and height error, with filters to match. Drawing an area to get its average time series, and CSV download for an area.</p></li>
+        <li><span>Then</span><p>bGMO Calibrated, with every stack tied to GNSS stations across Bangladesh so that rates become absolute.</p></li>
+        <li><span>Later</span><p>More cities and towns, yearly updates that add Sentinel‑1C data, and the two latest releases kept side by side.</p></li>
+      </ul></div>
+    </details>
+
+    <details class="about" id="policy">
+      <summary>Data policy and citation</summary>
+      <div class="method">
+        <p>The bGMO layers are provided free of charge for research, teaching, planning and public information. Please cite them as:</p>
+        <p class="cite">Bangladesh Ground Motion Observatory (bGMO) (2026). PS‑InSAR ground motion for the cities of Bangladesh, Release 1.0. SAR.Sense Geointelligence Lab. Contains modified Copernicus Sentinel-1 data (2016–2024).</p>
+        <h3>Code and method</h3>
+        <p>The processing code, the full method and the published layers are open on GitHub: <a href="https://github.com/TowhidulIslam27/bGMO" target="_blank" rel="noopener">github.com/TowhidulIslam27/bGMO</a>. Code is MIT licensed; the data layers are CC BY 4.0.</p>
+        <h3>Disclaimer</h3>
+        <p>All rates are relative to local reference areas and have not yet been calibrated against GNSS. They show where the ground moves and how fast compared with its surroundings. They do not replace a site investigation and should not be used alone for engineering or legal decisions.</p>
+      </div>
+    </details>
+  </aside>
+  <div class="resizer" id="resizer" role="separator" aria-orientation="vertical" aria-controls="side" aria-label="Resize side panel" tabindex="0" title="Drag to resize. Double-click to reset."></div>
+
+  <main class="stage">
+   <div class="mapwrap" aria-label="Map">
+    <div id="map"></div>
+    <div class="maptop">
+      <nav class="crumbs" id="crumbs" aria-label="Location"></nav>
+      <div class="chips">
+        <span class="chip" id="viewchip" hidden></span>
+        <span class="chip" id="cellchip" hidden></span>
+        <span class="chip" id="tilechip" hidden>Basemap tiles could not be loaded. Check your internet connection.</span>
+      </div>
+    </div>
+    <div id="tip" hidden></div>
+    <div id="loading">Loading…</div>
+   </div>
+   <section class="ts" id="ts" aria-live="polite"></section>
+  </main>
+</div>
+<footer class="sitefoot">
+  <p class="f-left">Developed and maintained by SAR.Sense Geointelligence Lab <span aria-hidden="true" style="margin:0 6px;opacity:.5">·</span><a class="gh" href="https://github.com/TowhidulIslam27/bGMO" target="_blank" rel="noopener"><svg width="13" height="13" viewBox="0 0 16 16" aria-hidden="true" style="vertical-align:-2px;margin-right:5px"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a></p>
+  <a class="f-logo" href="https://sarsense.com" target="_blank" rel="noopener" aria-label="SAR.Sense Geointelligence Lab">
+    <img class="logo-dk" src="assets/sarsense-dark.png" alt="SAR.Sense, detect | discern | defend" width="720" height="277">
+    <img class="logo-lt" src="assets/sarsense-light.png" alt="SAR.Sense, detect | discern | defend" width="720" height="277">
+  </a>
+  <p class="f-right">© 2026 SAR.Sense. All rights reserved.</p>
+</footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script>
+(() => {
+const DATA = 'data/';
+const TILES = {
+  dark:{url:'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',ref:'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}',attr:'Basemap © Esri, HERE, Garmin, © OpenStreetMap contributors',nz:16},
+  light:{url:'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',ref:'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}',attr:'Basemap © Esri, HERE, Garmin, © OpenStreetMap contributors',nz:16},
+  sat:{url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',attr:'Imagery © Esri, Maxar, Earthstar Geographics',nz:18}
+};
+const $ = id => document.getElementById(id);
+const store = {get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt = (v,d=1) => (v<0?'−':v>0?'+':'')+Math.abs(v).toFixed(d);
+const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const fdate = ms => {const d=new Date(ms);return `${d.getUTCDate()} ${MON[d.getUTCMonth()]} ${d.getUTCFullYear()}`};
+const fmon = ms => {const d=new Date(ms);return `${MON[d.getUTCMonth()]} ${d.getUTCFullYear()}`};
+const ms = d => Date.parse(d+'T00:00:00Z');
+const YR = 365.25*864e5;
+
+const S = {catalog:null,index:{},country:null,city:null,mode:'country',ds:null,cache:{},cur:-1,pins:[],clamp:5,filter:'all',base:null,hover:-1,bounds:null,measure:'los'};
+const VERT = () => S.measure==='vert', EW = () => S.measure==='ew';
+const ORT = ds => !!(ds&&ds.meta&&ds.meta.track==='ortho');
+const PREF_ORT = () => S.mode==='city' ? ORT(S.ds) : S.pref==='ortho';   // is the Ortho product the one in use
+const V = ds => ORT(ds)?(EW()?ds.ve:ds.vu):(VERT()?ds.vv:ds.vel);                 // velocity array for the current measure
+const ST = m => m.track==='ortho'?(EW()?m.stats_e:m.stats_v):(VERT()?m.stats_v:m.stats);
+const MNAME = () => EW()?'east–west':VERT()?'vertical':'LOS';
+const MCAP = () => EW()?'East–west':VERT()?'Vertical':'LOS';
+const TRK = t => t==='asc'?'Ascending':t==='dsc'?'Descending':'Ortho';
+let ramp = [];
+
+/* ---------- color ---------- */
+function hex2rgb(h){h=h.replace('#','');return [0,2,4].map(i=>parseInt(h.substr(i,2),16))}
+const LUT32=new Uint32Array(256), LUTCSS=new Array(256); let lutStamp=0;
+function readRamp(){ramp=['--v-n2','--v-n1','--v-0','--v-p1','--v-p2'].map(n=>hex2rgb(css(n))); buildLUT()}
+function buildLUT(){                        // 256 colours across -clamp..+clamp, as canvas strings and packed RGBA
+  for(let k=0;k<256;k++){const t=k/255*4, i=Math.min(3,Math.floor(t)), f=t-i, a=ramp[i], b=ramp[i+1];
+    const r=a[0]+(b[0]-a[0])*f|0, g=a[1]+(b[1]-a[1])*f|0, bl=a[2]+(b[2]-a[2])*f|0;
+    LUTCSS[k]=`rgb(${r},${g},${bl})`; LUT32[k]=(255<<24|bl<<16|g<<8|r)>>>0}
+  lutStamp++;
+}
+const cIdx = v => { let t=(v/S.clamp+1)/2; t=t<0?0:t>1?1:t; return t*255+.5|0 };
+function colours(ds){                      // per-point colour index for the current measure and colour range, cached
+  const stamp=S.measure+S.clamp+':'+lutStamp;
+  if(ds.ciStamp!==stamp){const v=V(ds),n=ds.n; if(!ds.ci) ds.ci=new Uint8Array(n); for(let i=0;i<n;i++) ds.ci[i]=cIdx(v[i]); ds.ciStamp=stamp}
+  return ds.ci;
+}
+function vcolor(v){
+  let t=Math.max(-1,Math.min(1,v/S.clamp)); t=(t+1)*2; const i=Math.min(3,Math.floor(t)), f=t-i;
+  const a=ramp[i],b=ramp[i+1]; return `rgb(${a[0]+(b[0]-a[0])*f|0},${a[1]+(b[1]-a[1])*f|0},${a[2]+(b[2]-a[2])*f|0})`;
+}
+const SERIES = () => [css('--s1'),css('--s2'),css('--s3')];
+const isDark = () => { const t=document.documentElement.getAttribute('data-theme'); if(t) return t==='dark';
+  try{return !matchMedia('(prefers-color-scheme: light)').matches}catch(e){return true} };
+
+/* ---------- map ---------- */
+const map = L.map('map',{zoomControl:false,minZoom:5,maxZoom:19}).setView([23.7,90.35],7);
+L.control.zoom({position:'topleft'}).addTo(map);
+map.attributionControl.setPrefix('');
+let tileLayer=null, refLayer=null, tileErrors=0, tileLoads=0;
+function setBase(b){
+  S.base=b; store.set('gme-base',b);
+  if(tileLayer){map.removeLayer(tileLayer);tileLayer=null}
+  if(refLayer){map.removeLayer(refLayer);refLayer=null}
+  tileErrors=0;tileLoads=0;$('tilechip').hidden=true;
+  map.getContainer().classList.toggle('base-dark',b==='dark'&&isDark());
+  if(b!=='off'){
+    const t=TILES[b];
+    tileLayer=L.tileLayer(t.url,{attribution:t.attr,maxZoom:19,maxNativeZoom:t.nz});
+    tileLayer.on('tileerror',()=>{tileErrors++; if(tileErrors>3&&tileLoads===0) $('tilechip').hidden=false});
+    tileLayer.on('tileload',()=>{tileLoads++;$('tilechip').hidden=true});
+    tileLayer.addTo(map);
+    if(t.ref){refLayer=L.tileLayer(t.ref,{maxZoom:19,maxNativeZoom:t.nz,zIndex:2}).addTo(map)}
+  }
+}
+
+/* boundaries */
+let countryLayer=null, cityLayer=null, labelLayer=L.layerGroup().addTo(map);
+function boundaryStyle(f){
+  const c=f.properties.city, active=S.mode==='city'&&S.city&&S.city.id===c;
+  return {stroke:false,fill:S.mode==='country',fillOpacity:0,className:'bpath'};
+}
+function buildBoundaries(gj){
+  const country=gj.features.filter(f=>f.properties.country), cities=gj.features.filter(f=>f.properties.city);
+  countryLayer=L.geoJSON(country,{interactive:false,style:{color:css('--faint'),weight:1,opacity:.8,fill:true,fillColor:css('--bound'),fillOpacity:.025}}).addTo(map);
+  cityLayer=L.geoJSON(cities,{style:boundaryStyle,onEachFeature:(f,l)=>{
+    l.on('click',e=>{if(S.mode==='country'){L.DomEvent.stop(e);chooseCity(f.properties.city)}});
+  }}).addTo(map);
+  S.bounds={}; cityLayer.eachLayer(l=>S.bounds[l.feature.properties.city]={b:l.getBounds(),basis:l.feature.properties.basis});
+}
+function refreshBoundaries(){
+  if(!cityLayer) return; cityLayer.setStyle(boundaryStyle);
+  // labels only in the country view
+  labelLayer.clearLayers();
+  if(S.mode!=='country') return;
+  S.country.cities.forEach(c=>{const bb=S.bounds[c.id]; if(!bb) return;
+    const live=c.datasets.length, n=c.datasets.reduce((m,k)=>Math.max(m,S.index[k].n),0);
+    const anchor=L.latLng(bb.b.getNorth(),bb.b.getCenter().lng);
+    L.marker(anchor,{interactive:false,keyboard:false,icon:L.divIcon({className:'',iconSize:null,
+      html:`<div class="clabel" style="transform:translate(-50%,-115%)"><b>${c.name}</b><span class="${live?'':'cs'}">${live?(n/1000).toFixed(1)+'k PS':'coming soon'}</span></div>`})}).addTo(labelLayer)});
+}
+
+/* points canvas: lives in a Leaflet pane so it pans with the map, is sized from map.getSize() on every redraw,
+   and is positioned from the map's pixel origin, the same reference Leaflet uses for the boundary vectors. */
+map.createPane('pts'); map.getPane('pts').style.zIndex=450; map.getPane('pts').classList.add('leaflet-pts-pane');
+// two canvases: a base layer with every point, redrawn only when the view or styling changes,
+// and a light overlay for hover, selection and pins, redrawn on every mouse move
+const cv=document.createElement('canvas'), ovc=document.createElement('canvas');
+[cv,ovc].forEach(c=>{c.setAttribute('aria-hidden','true');c.style.position='absolute';c.style.left='0';c.style.top='0';map.getPane('pts').appendChild(c)}); cv.id='pts';
+const ctx=cv.getContext('2d'), octx=ovc.getContext('2d'); let topLeft=L.point(0,0), W=0, H=0, DPR=1, img=null;
+function sizeCanvas(){
+  const sz=map.getSize(); DPR=window.devicePixelRatio||1; W=sz.x; H=sz.y;
+  const pw=Math.max(1,Math.round(W*DPR)), ph=Math.max(1,Math.round(H*DPR));
+  [cv,ovc].forEach(c=>{if(c.width!==pw||c.height!==ph){c.width=pw;c.height=ph} c.style.width=W+'px'; c.style.height=H+'px'});
+  if(!img||img.width!==pw||img.height!==ph) img=ctx.createImageData(pw,ph);
+}
+function project(ds){                       // canvas pixel = world pixel at this zoom minus the canvas's world origin
+  const z=map.getZoom(), scale=256*Math.pow(2,z), o=map.getPixelOrigin().add(topLeft), n=ds.n;
+  if(!ds.px) ds.px=new Float32Array(n*2);
+  const px=ds.px, mx=ds.mx, my=ds.my, ox=o.x, oy=o.y;
+  for(let i=0;i<n;i++){px[2*i]=mx[i]*scale-ox; px[2*i+1]=my[i]*scale-oy}
+}
+// Sentinel-1 IW resolution cell: slant-range resolution per sub-swath over sin(incidence) on the ground, azimuth along track
+const SWATH=[[36.5,2.7,22.5],[41.8,3.1,22.7],[90,3.5,22.6]];
+function cell(inc){if(!(inc>0)) inc=38; const s=SWATH.find(w=>inc<w[0]);return {rg:s[1]/Math.sin(inc*Math.PI/180),az:s[2]}}
+const mpp = lat => 40075016.686*Math.cos(lat*Math.PI/180)/(256*Math.pow(2,map.getZoom()));   // metres per screen pixel
+const midLat = ds => (ds.meta.bounds[1]+ds.meta.bounds[3])/2;
+function radius(){const z=map.getZoom();return Math.max(1,Math.min(5,1.7*Math.pow(1.45,z-13)))}
+const cellLen = ds => ORT(ds)?100:22.6;
+function trueCells(ds){ if(!ds||S.mode!=='city'||!(ds.inc||ORT(ds))) return false; return cellLen(ds)/mpp(midLat(ds))>=radius()*2.6 }
+function visible(ds,i){return S.filter==='all'||V(ds)[i]<=+S.filter}
+
+// spatial grid over the base canvas, rebuilt with each base redraw, so hit-testing touches a few dozen points
+let grid=null;
+function gridBuild(ds,cellPx){
+  const gw=Math.ceil(W/cellPx)+1, gh=Math.ceil(H/cellPx)+1;
+  if(!grid||grid.head.length<gw*gh) grid={head:new Int32Array(gw*gh)}; grid.head.fill(-1,0,gw*gh);
+  if(!ds.gnext||ds.gnext.length<ds.n) ds.gnext=new Int32Array(ds.n);
+  Object.assign(grid,{gw,gh,cs:cellPx,ds});
+}
+
+function paintPixels(ds,rad,ci){            // small dots straight into an ImageData buffer
+  const px=ds.px, u32=new Uint32Array(img.data.buffer), pw=img.width, ph=img.height, sz=Math.max(1,Math.round(rad*2*DPR)), h=sz>>1;
+  const order=ds.order, filt=S.filter!=='all', lim=+S.filter, v=V(ds);
+  for(let k=0;k<order.length;k++){const i=order[k]; if(filt&&v[i]>lim) continue;
+    const x0=Math.round(px[2*i]*DPR)-h, y0=Math.round(px[2*i+1]*DPR)-h; if(x0>=pw||y0>=ph||x0+sz<=0||y0+sz<=0) continue;
+    const col=LUT32[ci[i]], xa=x0<0?0:x0, xb=Math.min(pw,x0+sz), ya=y0<0?0:y0, yb=Math.min(ph,y0+sz);
+    for(let y=ya;y<yb;y++){const row=y*pw; for(let x=xa;x<xb;x++) u32[row+x]=col}
+  }
+}
+function paintShapes(ds,rad,ci,full){       // larger dots or true-size cells: one path per colour, drawn from weak to strong
+  const px=ds.px, v=V(ds), filt=S.filter!=='all', lim=+S.filter, buckets=new Array(256);
+  const m=full?mpp(midLat(ds)):0, rot=ORT(ds)?0:(ds.meta.heading||0)*Math.PI/180, cr=Math.cos(rot), sr=Math.sin(rot), pad=full?60:8;
+  for(let i=0;i<ds.n;i++){ if(filt&&v[i]>lim) continue; const x=px[2*i],y=px[2*i+1]; if(x<-pad||y<-pad||x>W+pad||y>H+pad) continue;
+    (buckets[ci[i]]||(buckets[ci[i]]=[])).push(i) }
+  const byStrength=[...Array(256).keys()].sort((a,b)=>Math.abs(a-127.5)-Math.abs(b-127.5));
+  ctx.setTransform(DPR,0,0,DPR,0,0); ctx.globalAlpha=full?.88:1;
+  for(const b of byStrength){const list=buckets[b]; if(!list) continue; ctx.fillStyle=LUTCSS[b]; ctx.beginPath();
+    for(const i of list){const x=px[2*i],y=px[2*i+1];
+      if(full){let hw,hh; if(ORT(ds)){hw=hh=50/m} else {const c=cell(ds.inc[i]); hw=c.rg/m/2; hh=c.az/m/2}      // rotated rectangle corners
+        ctx.moveTo(x+(-hw*cr+hh*sr), y+(-hw*sr-hh*cr)); ctx.lineTo(x+(hw*cr+hh*sr), y+(hw*sr-hh*cr));
+        ctx.lineTo(x+(hw*cr-hh*sr), y+(hw*sr+hh*cr)); ctx.lineTo(x+(-hw*cr-hh*sr), y+(-hw*sr+hh*cr)); ctx.closePath()}
+      else {ctx.moveTo(x+rad,y); ctx.arc(x,y,rad,0,6.2832)}}
+    ctx.fill()}
+  ctx.globalAlpha=1;
+  if(full&&ORT(ds)){                        // east-west arrows: length grows with speed, full half-cell at 5 mm/yr
+    const half=50/m, ink=css('--fg'), halo=css('--map'), list=[];
+    for(let i=0;i<ds.n;i++){ if(filt&&v[i]>lim) continue; const ve=ds.ve[i]; if(Math.abs(ve)<0.5) continue;
+      const x=px[2*i],y=px[2*i+1]; if(x<-pad||y<-pad||x>W+pad||y>H+pad) continue; list.push(i) }
+    const path=()=>{ctx.beginPath(); for(const i of list){const x=px[2*i],y=px[2*i+1], ve=ds.ve[i], L=Math.min(1,Math.abs(ve)/5)*half*0.9, d=Math.sign(ve), hd=Math.min(7,Math.max(3,L*0.45));
+      ctx.moveTo(x-d*L,y); ctx.lineTo(x+d*L,y); ctx.moveTo(x+d*(L-hd),y-hd*0.7); ctx.lineTo(x+d*L,y); ctx.lineTo(x+d*(L-hd),y+hd*0.7)}};
+    ctx.lineCap='round'; ctx.lineJoin='round';
+    path(); ctx.strokeStyle=halo; ctx.globalAlpha=.85; ctx.lineWidth=3.6; ctx.stroke();
+    ctx.globalAlpha=1; ctx.strokeStyle=ink; ctx.lineWidth=1.6; ctx.stroke();
+  }
+}
+function drawBase(){
+  sizeCanvas(); topLeft=map.containerPointToLayerPoint([0,0]); L.DomUtil.setPosition(cv,topLeft); L.DomUtil.setPosition(ovc,topLeft);
+  ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0,0,cv.width,cv.height); grid=null;
+  if(!S.country) return;
+  const rad=radius(), sets=S.mode==='country'?overviewSets():(S.ds?[S.ds]:(S.preview?[S.preview]:[]));
+  const usePixels = S.mode==='country' || !S.ds || (rad<2.2 && !trueCells(S.ds));
+  if(usePixels){ new Uint32Array(img.data.buffer).fill(0) }
+  for(const ds of sets){ project(ds); const ci=colours(ds), r=S.mode==='country'?Math.min(rad,1.2):rad;
+    if(usePixels) paintPixels(ds,r,ci); else paintShapes(ds,r,ci,trueCells(ds)) }
+  if(usePixels) ctx.putImageData(img,0,0);
+  // index points on screen and count them for the view chip
+  const ds=S.mode==='city'?S.ds:null; let n=0, sub=0;
+  if(ds){ gridBuild(ds,Math.max(24,Math.ceil(hitR()))); const px=ds.px, v=V(ds), g=grid, nx=ds.gnext;
+    for(let i=0;i<ds.n;i++){ if(!visible(ds,i)) continue; const x=px[2*i], y=px[2*i+1]; if(x<0||y<0||x>=W||y>=H) continue;
+      n++; if(EW()?Math.abs(v[i])>=2:v[i]<=-2) sub++; const c=(y/g.cs|0)*g.gw+(x/g.cs|0); nx[i]=g.head[c]; g.head[c]=i } }
+  updateViewChip(n,sub); updateCellChip();
+}
+function drawOverlay(){
+  octx.setTransform(1,0,0,1,0,0); octx.clearRect(0,0,ovc.width,ovc.height); octx.setTransform(DPR,0,0,DPR,0,0);
+  const ds=S.ds; if(S.mode!=='city'||!ds||!ds.px) return;
+  const rad=radius(), full=trueCells(ds), px=ds.px;
+  const ring_r = full ? Math.max(rad, cellLen(ds)/mpp(midLat(ds))/2) : rad;
+  const ser=SERIES(), sel=css('--sel'), bg=css('--map');
+  const ring=(i,col,label)=>{const x=px[2*i],y=px[2*i+1];
+    octx.lineWidth=4;octx.strokeStyle=bg;octx.beginPath();octx.arc(x,y,ring_r+6,0,6.2832);octx.stroke();
+    octx.lineWidth=2;octx.strokeStyle=col;octx.beginPath();octx.arc(x,y,ring_r+6,0,6.2832);octx.stroke();
+    if(label){octx.font='600 11px "IBM Plex Mono",monospace';octx.fillStyle=bg;octx.fillRect(x+ring_r+7,y-ring_r-17,13,14);octx.fillStyle=col;octx.fillText(label,x+ring_r+9.5,y-ring_r-6)}};
+  S.pins.forEach((i,k)=>ring(i,ser[k],String(k+1)));
+  if(S.cur>=0&&!S.pins.includes(S.cur)) ring(S.cur,sel,'');
+  if(S.hover>=0&&S.hover!==S.cur){const x=px[2*S.hover],y=px[2*S.hover+1];octx.lineWidth=1.5;octx.strokeStyle=sel;octx.beginPath();octx.arc(x,y,ring_r+3,0,6.2832);octx.stroke()}
+}
+function draw(){drawBase();drawOverlay()}
+function updateCellChip(){
+  const chip=$('cellchip'), ds=S.ds; if(!chip) return;
+  if(S.mode!=='city'||!ds){chip.hidden=true;return}
+  if(ORT(ds)){chip.hidden=false; chip.innerHTML=trueCells(ds)?'Cells drawn at true size: <b>100 × 100 m</b>':'Zoom in to see each Ortho cell at its true 100 m size'; return}
+  const full=trueCells(ds), i=S.cur>=0?S.cur:0, c=cell(ds.inc[i]);
+  chip.hidden=false; chip.innerHTML=full?`Points drawn at true size: <b>${c.rg.toFixed(1)} × ${c.az.toFixed(1)} m</b> resolution cell`:`Zoom in to see each point at its true ${c.rg.toFixed(0)} × ${c.az.toFixed(0)} m size`;
+}
+// canvas coordinates for a container point (the canvases move with the map pane between redraws)
+function toCanvas(p){const pane=L.DomUtil.getPosition(map.getPane('mapPane'))||L.point(0,0);return {x:p.x-pane.x-topLeft.x,y:p.y-pane.y-topLeft.y}}
+function nearest(cp,maxd){
+  const ds=S.ds; if(S.mode!=='city'||!ds||!ds.px||!grid||grid.ds!==ds) return -1;
+  const c=toCanvas(cp), g=grid, px=ds.px, nx=ds.gnext; let best=-1, bd=maxd*maxd;
+  const cx=Math.floor(c.x/g.cs), cy=Math.floor(c.y/g.cs);
+  for(let yy=cy-1;yy<=cy+1;yy++) for(let xx=cx-1;xx<=cx+1;xx++){ if(xx<0||yy<0||xx>=g.gw||yy>=g.gh) continue;
+    for(let i=g.head[yy*g.gw+xx];i>=0;i=nx[i]){const dx=px[2*i]-c.x, dy=px[2*i+1]-c.y, d=dx*dx+dy*dy; if(d<bd){bd=d;best=i}} }
+  return best;
+}
+const hitR = () => { const ds=S.ds; return trueCells(ds) ? Math.max(10, cellLen(ds)/mpp(midLat(ds))/2+4) : Math.max(10,radius()+6) };
+map.on('moveend',draw);
+map.on('zoomstart',()=>{cv.style.opacity=0;ovc.style.opacity=0});
+map.on('zoomend',()=>{draw();cv.style.opacity=1;ovc.style.opacity=1});
+map.on('resize',draw);
+try{ let rz=0; new ResizeObserver(()=>{cancelAnimationFrame(rz); rz=requestAnimationFrame(()=>{map.invalidateSize({pan:false}); draw()})}).observe(document.querySelector('.mapwrap')) }catch(e){}
+map.on('click',e=>{
+  if(S.mode==='country'){ // click near a city opens it
+    const hit=S.country.cities.find(c=>S.bounds[c.id]&&S.bounds[c.id].b.pad(.15).contains(e.latlng)); if(hit) chooseCity(hit.id); return }
+  const i=nearest(e.containerPoint,hitR()); if(i>=0) select(i)});
+let raf=0;
+map.on('mousemove',e=>{if(raf)return;raf=requestAnimationFrame(()=>{raf=0;
+  const i=nearest(e.containerPoint,hitR());
+  const tip=$('tip'); map.getContainer().classList.toggle('hot',i>=0);
+  if(i!==S.hover){S.hover=i;drawOverlay(); clearTimeout(pfTimer); if(i>=0&&!ORT(S.ds)){const ds=S.ds,c=chunkOf(ds,i); pfTimer=setTimeout(()=>prefetch(ds,c),350)}}   // prefetch once the pointer rests
+  if(i>=0){tip.hidden=false;tip.style.left=e.containerPoint.x+'px';tip.style.top=e.containerPoint.y+'px';tip.textContent=fmt(V(S.ds)[i])+' mm/yr '+MNAME()} else tip.hidden=true;
+})});
+map.on('mouseout',()=>{$('tip').hidden=true;if(S.hover>=0){S.hover=-1;drawOverlay()}});
+
+function updateViewChip(n,sub){
+  const chip=$('viewchip');
+  if(S.mode!=='city'||!S.ds){chip.hidden=true;return}
+  chip.hidden=false; chip.innerHTML=`<b>${n.toLocaleString()}</b> ${ORT(S.ds)?'cells':'points'} in view · <b>${n?Math.round(100*sub/n):0}%</b> ${EW()?'moving ≥ 2 mm/yr east or west':'≤ −2 mm/yr'}`;
+}
+
+/* ---------- data ---------- */
+async function getBin(url,Type,init){       // published as base64 text; decoded natively where the browser can
+  const r=await fetch(url,init); if(!r.ok) throw new Error(url+' '+r.status); const txt=(await r.text()).trim();
+  if(Uint8Array.fromBase64) return new Type(Uint8Array.fromBase64(txt).buffer);
+  const b=atob(txt), n=b.length, u=new Uint8Array(n); for(let i=0;i<n;i++) u[i]=b.charCodeAt(i); return new Type(u.buffer)}
+function orderByMagnitude(v,n){            // counting sort on |v| in 0.01 mm/yr steps: weak points first, strong on top
+  const B=4096, key=new Uint16Array(n), cnt=new Uint32Array(B+1);
+  for(let i=0;i<n;i++){const k=Math.min(B-1,Math.abs(v[i])*100|0); key[i]=k; cnt[k+1]++}
+  for(let k=0;k<B;k++) cnt[k+1]+=cnt[k];
+  const out=new Uint32Array(n); for(let i=0;i<n;i++) out[cnt[key[i]]++]=i; return out}
+const merc = la => {const s=Math.sin(la*Math.PI/180); return 0.5-Math.log((1+s)/(1-s))/(4*Math.PI)};
+async function loadPoints(key,low){
+  if(S.cache[key]) return S.cache[key];
+  if(S.loading&&S.loading[key]) return S.loading[key];
+  const meta=S.index[key];
+  const p=getBin(DATA+key+'.pts.b64.txt',Uint16Array,{priority:low?'low':'high'}).then(raw=>{
+    const n=meta.n, q=meta.qb, sx=(q[2]-q[0])/65535, sy=(q[3]-q[1])/65535, s16=new Int16Array(raw.buffer);
+    const ds={key,meta,n,lon:new Float64Array(n),lat:new Float64Array(n),vel:new Float32Array(n),rmse:new Float32Array(n),vv:new Float32Array(n),inc:new Float32Array(n),mx:new Float64Array(n),my:new Float64Array(n),chunks:{}};
+    if(meta.track==='ortho'){ ds.vu=ds.vel; ds.ve=new Float32Array(n); ds.na=new Uint16Array(n); ds.nd=new Uint16Array(n); ds.vv=ds.vu; ds.inc=null; ds.cts={}; ds.ctsP={};
+      for(let i=0;i<n;i++){const o=6*i, lo=q[0]+raw[o]*sx, la=q[1]+raw[o+1]*sy; ds.lon[i]=lo; ds.lat[i]=la;
+        ds.vu[i]=s16[o+2]/100; ds.ve[i]=s16[o+3]/100; ds.na[i]=raw[o+4]; ds.nd[i]=raw[o+5]; ds.mx[i]=(lo+180)/360; ds.my[i]=merc(la)} }
+    else for(let i=0;i<n;i++){const o=6*i, lo=q[0]+raw[o]*sx, la=q[1]+raw[o+1]*sy; ds.lon[i]=lo; ds.lat[i]=la;
+      ds.vel[i]=s16[o+2]/100; ds.rmse[i]=s16[o+3]/100; ds.vv[i]=s16[o+4]/100; ds.inc[i]=s16[o+5]/100; ds.mx[i]=(lo+180)/360; ds.my[i]=merc(la)}
+    ds.order=orderByMagnitude(ds.vel,n);
+    ds.t=meta.dates.map(ms); ds.T=ds.t.length; S.cache[key]=ds; return ds});
+  (S.loading=S.loading||{})[key]=p; return p;
+}
+// country view: one small file with a thinned sample of every city
+let OV=null;
+function loadOverview(){ if(OV) return OV; OV=getBin(DATA+'overview.b64.txt',Float32Array).then(a=>{
+  const out={}; for(const d of Object.values(S.index)){ if(!d.ov) continue; const [s0,n]=d.ov;
+    const ds={key:d.key+'#ov',meta:d,n,lon:new Float64Array(n),lat:new Float64Array(n),vel:new Float32Array(n),vv:new Float32Array(n),mx:new Float64Array(n),my:new Float64Array(n)};
+    for(let i=0;i<n;i++){const o=4*(s0+i); ds.lon[i]=a[o]; ds.lat[i]=a[o+1]; ds.vel[i]=a[o+2]; ds.vv[i]=a[o+3]; ds.mx[i]=(a[o]+180)/360; ds.my[i]=merc(a[o+1])}
+    ds.order=Uint32Array.from({length:n},(_,i)=>i); out[d.city]=ds }
+  OV.data=out; return out}); return OV }
+// time series are split into spatial chunks of meta.chunk points, fetched on demand
+const chunkOf = (ds,i) => Math.floor(i/ds.meta.chunk);
+// clicks load at high priority; a hover prefetch runs at low priority, one at a time, and is cancelled by a click
+let pfTimer=0, pf=null;
+function loadChunk(ds,c,low){
+  const cur=ds.chunks[c]; if(cur) return Promise.resolve(cur);
+  const ctrl=new AbortController();
+  const p=getBin(DATA+ds.key+'.ts.'+c+'.b64.txt',Int16Array,{signal:ctrl.signal,priority:low?'low':'high'})
+    .then(a=>(ds.chunks[c]=a),e=>{if(ds.chunks[c]===p) delete ds.chunks[c]; throw e});
+  p.ctrl=ctrl; ds.chunks[c]=p; return p;
+}
+function prefetch(ds,c){
+  if(ds!==S.ds||ds.chunks[c]) return;
+  if(pf&&!(pf.ds.chunks[pf.c] instanceof Int16Array)) return;      // one prefetch at a time
+  pf={ds,c}; loadChunk(ds,c,true).catch(()=>{});
+}
+function cancelPrefetch(keep){
+  if(!pf) return; const p=pf.ds.chunks[pf.c];
+  if(p&&!(p instanceof Int16Array)&&!keep.has(pf.c+'|'+pf.ds.key)) p.ctrl.abort(); pf=null;
+}
+const ready = (ds,ids) => ORT(ds) ? ids.every(i=>ds.cts[i]) : ids.every(i=>ds.chunks[chunkOf(ds,i)] instanceof Int16Array);
+function cellKey(g,lon,lat){return Math.floor((lon-g.lon0)*g.kx/g.step)*100000+Math.floor((lat-g.lat0)*g.ky/g.step)}
+function cellMap(P,g){ if(P.cmap&&P.cmapG===g) return P.cmap; const m=new Map();
+  for(let i=0;i<P.n;i++){const k=cellKey(g,P.lon[i],P.lat[i]); let a=m.get(k); if(!a) m.set(k,a=[]); a.push(i)}
+  P.cmap=m; P.cmapG=g; return m }
+function orthoTS(ds,i){
+  if(ds.cts[i]) return Promise.resolve(ds.cts[i]); if(ds.ctsP[i]) return ds.ctsP[i];
+  const meta=ds.meta, g=meta.grid, city=meta.city;
+  const p=(async()=>{
+    const [A,Dd]=await Promise.all([loadPoints(city+'-asc'),loadPoints(city+'-dsc')]);
+    const k=cellKey(g,ds.lon[i],ds.lat[i]), mA=cellMap(A,g).get(k)||[], mD=cellMap(Dd,g).get(k)||[];
+    await Promise.all([ensure(A,mA),ensure(Dd,mD)]);
+    const G=ds.t, tr=[[A,mA,meta.ref.asc,S.index[city+'-asc']],[Dd,mD,meta.ref.dsc,S.index[city+'-dsc']]].map(([P,mm,ref,mi])=>{
+      const T=P.T, K=P.meta.chunk, tm=ms(mi.master), mean=new Float64Array(T); let th=0;
+      for(const j of mm){const a=P.chunks[chunkOf(P,j)], o=(j%K)*T; for(let e=0;e<T;e++) mean[e]+=a[o+e]/10; th+=P.inc[j]}
+      for(let e=0;e<T;e++) mean[e]=mean[e]/mm.length - ref*(P.t[e]-tm)/YR;          // shared reference ground
+      const out=new Float64Array(G.length); let e=0;                                     // linear interpolation onto the 12-day grid
+      for(let q=0;q<G.length;q++){ while(e<T-2&&P.t[e+1]<G[q]) e++; const f=(G[q]-P.t[e])/(P.t[e+1]-P.t[e]); out[q]=mean[e]+(mean[e+1]-mean[e])*Math.max(0,Math.min(1,f)) }
+      const z=out[0]; for(let q=0;q<out.length;q++) out[q]-=z;
+      return {d:out, th:th/mm.length*Math.PI/180, h:(mi.heading+(mi.track==='dsc'?180:0))*Math.PI/180};
+    });
+    const [a,d]=tr, a11=Math.cos(a.th), a12=-Math.sin(a.th)*Math.cos(a.h), a21=Math.cos(d.th), a22=-Math.sin(d.th)*Math.cos(d.h), det=a11*a22-a12*a21;
+    const u=new Array(G.length), e=new Array(G.length);
+    for(let q=0;q<G.length;q++){ u[q]=(a22*a.d[q]-a12*d.d[q])/det; e[q]=(-a21*a.d[q]+a11*d.d[q])/det }
+    return (ds.cts[i]={u,e,thA:a.th,thD:d.th});
+  })();
+  ds.ctsP[i]=p; p.catch(()=>{delete ds.ctsP[i]}); return p;
+}
+function ensure(ds,ids){if(ORT(ds)) return Promise.all(ids.map(i=>orthoTS(ds,i))); const cs=[...new Set(ids.map(i=>chunkOf(ds,i)))]; clearTimeout(pfTimer); cancelPrefetch(new Set(cs.map(c=>c+'|'+ds.key))); return Promise.all(cs.map(c=>loadChunk(ds,c)))}
+function overviewKey(c){return c.datasets.find(k=>S.index[k].track==='dsc')||c.datasets[0]}
+function overviewSets(){
+  if(S.pref==='ortho'){const a=S.country.cities.map(c=>S.cache[c.id+'-ortho']).filter(Boolean); if(a.length) return a}
+  const o=OV&&OV.data; return o?S.country.cities.map(c=>o[c.id]).filter(Boolean):[]}
+function loadOrthoOverview(){ if(S.pref!=='ortho'||!S.country) return Promise.resolve();
+  return Promise.all(S.country.cities.map(c=>loadPoints(c.id+'-ortho').catch(()=>null))).then(()=>{if(S.mode==='country'){draw();renderCountry()}}) }
+function series(i){const ds=S.ds; if(ORT(ds)) return EW()?ds.cts[i].e:ds.cts[i].u; const T=ds.T,K=ds.meta.chunk,a=ds.chunks[chunkOf(ds,i)],o=(i%K)*T,out=new Array(T),f=VERT()?1/Math.cos(ds.inc[i]*Math.PI/180):1;
+  for(let j=0;j<T;j++)out[j]=a[o+j]/10*f;return out}
+function fitLine(t,y){const n=t.length,t0=t[0];let sx=0,sy=0,sxx=0,sxy=0;for(let j=0;j<n;j++){const x=(t[j]-t0)/YR;sx+=x;sy+=y[j];sxx+=x*x;sxy+=x*y[j]}const b=(n*sxy-sx*sy)/(n*sxx-sx*sx),a=(sy-b*sx)/n;return {a,b,at:m=>a+b*(m-t0)/YR}}
+
+/* ---------- navigation ---------- */
+function pressed(group,val){document.querySelectorAll(`#${group} button`).forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===String(val)||b.dataset.t===String(val)||b.dataset.c===String(val))))}
+function setHash(h){try{history.replaceState(null,'','#'+h)}catch(e){}}
+function buildCountries(){
+  const sel=$('country'); if(!sel) return; sel.innerHTML=S.catalog.countries.map(c=>`<option value="${c.id}">${c.name}</option>`).join('')+'<option disabled>More countries coming soon</option>';
+  sel.onchange=()=>chooseCountry(sel.value);
+}
+function buildCities(){
+  const el=$('cities'); el.innerHTML='';
+  S.country.cities.forEach(c=>{
+    const sets=c.datasets.map(k=>S.index[k]); const n=sets.filter(d=>d.track!=='ortho').reduce((m,d)=>Math.max(m,d.n),0);
+    const b=document.createElement('button');b.className='city';b.id='city-'+c.id;b.dataset.c=c.id;
+    b.innerHTML=`<b>${c.name}</b><span class="trk">${sets.length?sets.map(d=>`<i title="${TRK(d.track)}">${d.track==='asc'?'ASC':d.track==='dsc'?'DSC':'ORT'}</i>`).join(''):'<i class="cs">SOON</i>'}</span><span class="cn">${sets.length?(n/1000).toFixed(1)+'k PS':'—'}</span>`;
+    b.onclick=()=>chooseCity(c.id); b.onmouseenter=()=>{const t=c.datasets.map(k=>S.index[k]).find(d=>d.track===(S.pref||'dsc')); if(t) loadPoints(t.key).catch(()=>{})}; el.appendChild(b)});
+}
+function crumbs(){
+  const c=S.city, el=$('crumbs');
+  if(S.mode==='country'){el.innerHTML=`<span>${S.country.name}</span><i>›</i><span style="font-weight:400;color:var(--muted)">choose a city</span>`;return}
+  const trk=S.ds?TRK(S.ds.meta.track):'';
+  el.innerHTML=`<button id="cr-country">${S.country.name}</button><i>›</i><span>${c.name}</span>${trk?`<i>·</i><span style="font-weight:400;color:var(--muted)">${trk}</span>`:''}`;
+  $('cr-country').onclick=()=>chooseCountry(S.country.id);
+}
+async function chooseCountry(id){
+  S.country=S.catalog.countries.find(c=>c.id===id)||S.catalog.countries[0];
+  S.mode='country'; S.city=null; S.ds=null; S.cur=-1; S.pins=[];
+  buildCities(); pressed('cities',''); setHash(S.country.id);
+  $('trk-asc').disabled=$('trk-dsc').disabled=$('trk-ort').disabled=false; pressed('tracks',S.pref); setMeasure(S.measure);
+  const b=S.country.bounds; map.fitBounds([[b[1],b[0]],[b[3],b[2]]],{padding:[20,20],animate:false});
+  refreshBoundaries(); crumbs(); renderCountry(); $('loading').hidden=true;
+  await Promise.all([loadOverview().catch(()=>null),loadOrthoOverview()]);
+  if(S.mode==='country'){draw();renderCountry()}
+}
+async function chooseCity(id,track){
+  const c=S.country.cities.find(x=>x.id===id); if(!c) return;
+  const sets=c.datasets.map(k=>S.index[k]);
+  const want0=track||S.pref||(S.ds&&S.ds.meta.track)||'dsc', target=sets.find(d=>d.track===want0)||sets[0];
+  // switch at once: clear the old selection, frame the city, and show the light overview sample while full points load
+  S.mode='city'; S.city=c; S.ds=null; S.cur=-1; S.pins=[]; S.hover=-1; pressed('cities',id);
+  S.preview=(want0==='ortho'&&S.cache[c.id+'-ortho'])||(OV&&OV.data&&OV.data[c.id])||null;
+  if(target&&!S.cache[target.key]){const b=target.bounds; map.fitBounds([[b[1],b[0]],[b[3],b[2]]],{padding:[30,30],animate:false}); refreshBoundaries(); crumbs(); draw()}
+  $('trk-asc').disabled=!sets.some(d=>d.track==='asc'); $('trk-dsc').disabled=!sets.some(d=>d.track==='dsc'); $('trk-ort').disabled=!sets.some(d=>d.track==='ortho');
+  if(!sets.length){
+    S.ds=null;S.cur=-1;S.pins=[]; pressed('tracks',''); setHash(id);
+    const bb=S.bounds[id]; if(bb) map.fitBounds(bb.b,{padding:[30,30],animate:false});
+    refreshBoundaries(); crumbs(); renderStatsEmpty(c); renderHist([]); renderBaselines(); renderComing(c); draw(); return }
+  const want=track||S.pref||(S.ds&&S.ds.meta.track)||'dsc';
+  const m=sets.find(d=>d.track===want)||sets[0];
+  await chooseDataset(m.key);
+}
+async function chooseDataset(key){
+  S.req=key; const cached=!!S.cache[key];
+  if(!cached){$('loading').hidden=false; $('loading').textContent=`Loading ${S.index[key].n.toLocaleString()} ${S.index[key].track==='ortho'?'cells':'points'}…`}
+  const meta=S.index[key], first=(meta.imin||[0,0])[VERT()?1:0], o=meta.track==='ortho';
+  let ds; try{ const pp=loadPoints(key);
+    if(o){ loadPoints(meta.city+'-asc').catch(()=>{}); loadPoints(meta.city+'-dsc').catch(()=>{}) }    // members for the cell time series
+    else pp.then(d=>loadChunk(d,chunkOf(d,first))).catch(()=>{}); ds=await pp }
+  catch(err){if(S.req===key) $('loading').textContent='Could not load '+key+'. Check the connection and choose the city again.';return}
+  if(S.req!==key) return;                    // a newer choice has been made meanwhile
+  S.cur=-1; S.preview=null; S.ds=ds;S.pins=[];S.hover=-1; S.pref=ds.meta.track; store.set('gme-pref',S.pref); pressed('tracks',ds.meta.track); setHash(key); setMeasure(S.measure);
+  const b=ds.meta.bounds; map.fitBounds([[b[1],b[0]],[b[3],b[2]]],{padding:[30,30],animate:false});
+  refreshBoundaries(); crumbs(); renderStats(); renderHist([V(ds)]); renderBaselines();
+  const mi=first;   // open on the fastest-subsiding point (precomputed)
+  $('loading').hidden=true; S.cur=mi; draw(); renderTS();
+}
+
+/* ---------- side panel ---------- */
+function statGrid(rows){$('stats').innerHTML=rows.map(([k,v,w])=>`<div class="stat${w?' wide':''}"><dt>${k}</dt><dd>${v}</dd></div>`).join('')}
+function renderStats(){
+  const ds=S.ds,s=ST(ds.meta), span=(ds.t[ds.T-1]-ds.t[0])/YR, o=ORT(ds);
+  $('sumlbl').textContent=o?`${S.city.name} · ortho · paths ${S.index[S.city.id+'-asc'].path} + ${S.index[S.city.id+'-dsc'].path}`:`${S.city.name} · ${ds.meta.track==='asc'?'ascending':'descending'} · path ${ds.meta.path}`;
+  statGrid([[o?'Cells (100 m)':'PS points',ds.n.toLocaleString()],[o?'Epochs (12‑day)':'Acquisitions',`${ds.T} <small>${span.toFixed(1)} yr</small>`],
+    ['Period',`<small style="font-size:12.5px;color:var(--fg)">${fmon(ds.t[0])} – ${fmon(ds.t[ds.T-1])}</small>`],[`Median ${MNAME()}`,`${fmt(s.median,2)} <small>mm/yr</small>`],
+    ['≤ −5 mm/yr',`${(100*s.fast).toFixed(1)}<small>%</small>`],['−5 to −2 mm/yr',`${(100*s.mod).toFixed(1)}<small>%</small>`]]);
+}
+function renderStatsEmpty(c){
+  $('sumlbl').textContent=c.name; const bl=c.baselines||{};
+  statGrid([['PS points','<small style="font-size:12.5px;color:var(--fg)">Coming soon</small>'],['Boundary','<small style="font-size:12px;color:var(--fg)">'+((S.bounds[c.id]||{}).basis||'—')+'</small>'],
+    ...['asc','dsc'].filter(t=>bl[t]).map(t=>[`${t==='asc'?'Ascending':'Descending'} scenes`,`${bl[t].pairs.length+1} <small>acquired</small>`])]);
+}
+function renderCountrySummary(){
+  const live=S.country.cities.filter(c=>c.datasets.length), keys=S.country.cities.flatMap(c=>c.datasets);
+  const total=live.reduce((m,c)=>m+Math.max(...c.datasets.map(k=>S.index[k].n)),0);
+  const t0=Math.min(...keys.map(k=>ms(S.index[k].dates[0]))), t1=Math.max(...keys.map(k=>ms(S.index[k].dates.at(-1))));
+  $('sumlbl').textContent=S.country.name;
+  statGrid([['Cities',`${S.country.cities.length} <small>${live.length} with data</small>`],['PS points',total.toLocaleString()],
+    ['Datasets',`${keys.length} <small>asc + dsc</small>`],['Period',`<small style="font-size:12.5px;color:var(--fg)">${fmon(t0)} – ${fmon(t1)}</small>`]]);
+}
+function renderHist(arrs){
+  const lo=-12, hi=12, nb=48, w=(hi-lo)/nb, cnt=new Array(nb).fill(0);
+  arrs.forEach(a=>{for(let i=0;i<a.length;i++){let k=Math.floor((a[i]-lo)/w);k=Math.max(0,Math.min(nb-1,k));cnt[k]++}});
+  const W=320,H=92,pad=6,bh=64,mx=Math.max(1,...cnt), X=v=>pad+(v-lo)/(hi-lo)*(W-2*pad);
+  let g=''; cnt.forEach((c,k)=>{const v0=lo+k*w,hgt=c?Math.max(1.5,Math.sqrt(c/mx)*bh):0;
+    g+=`<rect x="${X(v0)+0.5}" y="${bh-hgt}" width="${(W-2*pad)/nb-1}" height="${hgt}" rx="1" fill="${vcolor(v0+w/2)}"><title>${fmt(v0)} to ${fmt(v0+w)} mm/yr: ${c.toLocaleString()} points</title></rect>`});
+  if(!arrs.length) g=`<text x="${W/2}" y="${bh/2+4}" text-anchor="middle">No PS data yet</text>`;
+  let grad=''; for(let k=0;k<=20;k++){const v=-S.clamp+2*S.clamp*k/20;grad+=`<stop offset="${k/20}" stop-color="${vcolor(v)}"/>`}
+  const c=S.clamp, cx0=X(Math.max(lo,-c)), cx1=X(Math.min(hi,c));
+  const ticks=[-12,-c,0,c,12].filter((v,i,a)=>a.indexOf(v)===i);
+  $('hist').innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Histogram of ${MNAME()} velocity">
+   <defs><linearGradient id="cg" x1="0" x2="1">${grad}</linearGradient></defs>${g}
+   <rect x="${X(lo)}" y="${bh+5}" width="${cx0-X(lo)}" height="6" fill="${vcolor(-99)}"/>
+   <rect x="${cx0}" y="${bh+5}" width="${cx1-cx0}" height="6" fill="url(#cg)"/>
+   <rect x="${cx1}" y="${bh+5}" width="${X(hi)-cx1}" height="6" fill="${vcolor(99)}"/>
+   ${ticks.map(v=>`<line x1="${X(v)}" x2="${X(v)}" y1="${bh+11}" y2="${bh+14}" stroke="var(--faint)"/><text x="${X(v)}" y="${H-1}" text-anchor="${v===lo?'start':v===hi?'end':'middle'}">${v===0?'0':fmt(v,0)}</text>`).join('')}
+  </svg>`;
+}
+function baselinePlot(bl,title){
+  const pts=bl.pairs.map(([d,b])=>[ms(d),b]), m=ms(bl.master);
+  const W=320,H=150,L=34,R=8,T=8,B=20, t0=Math.min(m,...pts.map(p=>p[0])), t1=Math.max(m,...pts.map(p=>p[0]));
+  const bmax=Math.max(...pts.map(p=>Math.abs(p[1])))*1.08, X=t=>L+(t-t0)/(t1-t0)*(W-L-R), Y=b=>T+(bmax-b)/(2*bmax)*(H-T-B);
+  const yrs=[];for(let y=new Date(t0).getUTCFullYear()+1;y<=new Date(t1).getUTCFullYear();y++)yrs.push(y);
+  const step=bmax>120?100:50, yt=[];for(let v=-Math.floor(bmax/step)*step;v<=bmax;v+=step)yt.push(v);
+  return `<p class="lbl" style="margin-top:10px">${title}: perpendicular baselines (m), master ${fdate(m)}</p>
+  <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Perpendicular baseline plot">
+  ${yt.map(v=>`<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="${L-4}" y="${Y(v)+3}" text-anchor="end">${v}</text>`).join('')}
+  ${yrs.filter((y,i)=>yrs.length<7||i%2===0).map(y=>`<text x="${X(Date.UTC(y,0,1))}" y="${H-5}" text-anchor="middle">${y}</text>`).join('')}
+  ${pts.map(p=>`<line x1="${X(m)}" y1="${Y(0)}" x2="${X(p[0])}" y2="${Y(p[1])}" stroke="var(--faint)" stroke-width=".5" opacity=".6"/>`).join('')}
+  ${pts.map(p=>`<circle cx="${X(p[0])}" cy="${Y(p[1])}" r="2" fill="var(--muted)"/>`).join('')}
+  <circle cx="${X(m)}" cy="${Y(0)}" r="4" fill="var(--accent)" stroke="var(--panel)" stroke-width="1.5"/></svg>`;
+}
+function renderBaselines(){
+  const el=$('bl'); if(!S.country) return;
+  if(!$('about').open){el.dataset.stale='1';return} el.dataset.stale='';
+  const cities=[...S.country.cities].sort((a,b)=>(b===S.city)-(a===S.city));
+  el.innerHTML=cities.map(c=>{const sets=c.datasets.map(k=>S.index[k]).filter(d=>d&&d.baselines);
+    if(!sets.length) return '';
+    return `<div class="blcity${c===S.city?' cur':''}"><h4>${c.name}<small>${sets.map(d=>`${d.track.toUpperCase()} ${d.baselines.pairs.length}`).join(' · ')} scenes</small></h4>`+
+      sets.map(d=>baselinePlot(d.baselines,`${d.track==='asc'?'Ascending':'Descending'}, path ${d.path}`)).join('')+'</div>'}).join('');
+}
+function renderApps(){
+  $('approws').innerHTML=S.country.cities.map(c=>{const d=S.index[c.id+'-ortho']; if(!d) return ''; const s=d.stats_v;
+    return `<tr data-c="${c.id}" style="cursor:pointer"><td>${c.name}</td><td>${d.n.toLocaleString()}</td><td>${fmt(s.median,1)}</td><td>${fmt(s.p5,1)}</td><td>${(100*s.fast).toFixed(1)}%</td><td>${fmt(d.stats_e.p5,1)} / ${fmt(d.stats_e.p95,1)}</td></tr>`}).join('');
+  $('approws').querySelectorAll('tr').forEach(tr=>tr.onclick=()=>{setMeasure('vert'); chooseCity(tr.dataset.c,'ortho')});
+  const pts=Object.values(S.index).filter(d=>d.track!=='ortho').reduce((a,d)=>a+d.n,0), cells=Object.values(S.index).filter(d=>d.track==='ortho').reduce((a,d)=>a+d.n,0);
+  $('ts-points').textContent=`${pts.toLocaleString()} PS in ${Object.values(S.index).filter(d=>d.track!=='ortho').length} stacks`;
+  $('ts-ortho').textContent=`100 m cells, 12‑day time step, ${cells.toLocaleString()} cells`;
+}
+// "lat, lon" (either order is accepted inside Bangladesh): open the city, zoom in, select the nearest point within 150 m
+async function goTo(text){
+  const msg=$('gotomsg'), n=(text.match(/-?\d+(\.\d+)?/g)||[]).map(Number);
+  if(n.length<2){msg.textContent='Type a latitude and longitude, for example 23.7806, 90.4074.';return}
+  let [lat,lon]=n; if(lat>80&&lon<30) [lat,lon]=[lon,lat];
+  const inB=(b,m)=>lon>=b[0]-m&&lon<=b[2]+m&&lat>=b[1]-m&&lat<=b[3]+m;
+  const c=S.country.cities.find(c=>c.datasets.some(k=>inB(S.index[k].bounds,0.01)));
+  if(!c){msg.textContent=`No bGMO data near ${lat.toFixed(4)}, ${lon.toFixed(4)}. The current release covers six cities.`;return}
+  if(S.mode!=='city'||S.city!==c) await chooseCity(c.id);
+  const ds=S.ds; if(!ds) return;
+  let best=-1,bd=Infinity; const kx=111320*Math.cos(lat*Math.PI/180);
+  for(let i=0;i<ds.n;i++){const dx=(ds.lon[i]-lon)*kx, dy=(ds.lat[i]-lat)*110574, d=dx*dx+dy*dy; if(d<bd){bd=d;best=i}}
+  map.setView([lat,lon],17,{animate:false});
+  if(best>=0&&Math.sqrt(bd)<=150){ select(best); msg.textContent=`${c.name}: nearest ${ORT(ds)?'cell':'point'} is ${Math.round(Math.sqrt(bd))} m away.` }
+  else msg.textContent=`${c.name}: no ${ORT(ds)?'Ortho cell':'point'} within 150 m of that spot on the ${TRK(ds.meta.track).toLowerCase()} layer.`;
+}
+$('goto').addEventListener('submit',e=>{e.preventDefault(); goTo($('goto-in').value).catch(()=>{$('gotomsg').textContent='Could not load that area. Check the connection and try again.'})});
+function renderMethodTable(){
+  const rows=S.country.cities.map(c=>{const a=S.index[c.id+'-asc'],d=S.index[c.id+'-dsc'];if(!a||!d)return '';
+    return `<tr><td>${c.name}</td><td>${a.path}</td><td>${d.path}</td><td>${a.T||a.dates.length} / ${d.T||d.dates.length}</td></tr>`}).join('');
+  $('mrows').innerHTML=rows;
+}
+
+/* ---------- card ---------- */
+function cardHead(title,sub,right=''){
+  const collapsed=$('ts').classList.contains('collapsed');
+  return `<div class="ts-head"><div style="min-width:0"><div class="pid">${title}</div>${sub}</div>
+   <div style="display:flex;align-items:flex-start">${right}<button class="min" id="tsmin" aria-label="${collapsed?'Expand':'Collapse'} panel" title="${collapsed?'Expand':'Collapse'}">${collapsed?'▴':'▾'}</button></div></div>`;
+}
+function bindMin(redraw){$('tsmin').onclick=()=>{$('ts').classList.toggle('collapsed');redraw()}}
+function renderCountry(){
+  renderCountrySummary(); renderHist(overviewSets().map(V)); renderBaselines(); draw();
+  const rows=S.country.cities.map(c=>{
+    if(!c.datasets.length) return `<tr data-c="${c.id}"><td>${c.name}</td><td colspan="4" class="cs">PS time series coming soon</td></tr>`;
+    const sets=c.datasets.map(k=>S.index[k]), d=sets.find(x=>x.track===(S.pref||'dsc'))||sets[0], st=ST(d), f=st.fast*100;
+    return `<tr data-c="${c.id}"><td>${c.name}</td><td>${sets.map(x=>x.track.toUpperCase()).join(' + ')}</td><td>${d.n.toLocaleString()}</td><td>${fmt(st.median,2)}</td><td><span class="bar" style="width:${Math.max(2,f*4)}px"></span>${f.toFixed(1)}%</td></tr>`}).join('');
+  $('ts').innerHTML=cardHead(`${S.country.name}`,`<div class="sub">City overview, ${EW()?'east–west movement':VERT()?'vertical movement':'LOS velocity'}. Figures use the ${S.pref==='ortho'?'Ortho cells':S.pref==='asc'?'ascending track':'descending track'}.</div>`)+
+   `<div class="tbl"><table><thead><tr><th>City</th><th>Tracks</th><th>${S.pref==='ortho'?'Cells':'PS points'}</th><th>Median ${EW()?'E–W':VERT()?'vert.':'LOS'} mm/yr</th><th>${EW()?'≤ −5 (west)':'≤ −5 mm/yr'}</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  $('ts').querySelectorAll('tbody tr').forEach(tr=>tr.onclick=()=>chooseCity(tr.dataset.c));
+  bindMin(renderCountry);
+}
+function renderComing(c){
+  const bl=c.baselines||{}, n=['asc','dsc'].filter(t=>bl[t]).map(t=>`${bl[t].pairs.length+1} ${t==='asc'?'ascending':'descending'}`);
+  $('ts').innerHTML=cardHead(c.name,`<div class="sub">${(S.bounds[c.id]||{}).basis||''}</div>`,`<span class="pill" style="margin:2px 4px 0 0"><i style="background:var(--faint)"></i>Coming soon</span>`)+
+   `<p class="note">PS‑InSAR velocities and time series for ${c.name} will appear here.${n.length?` Acquisitions on record: ${n.join(' and ')} scenes. Their baselines are under About the data.`:''}</p>`;
+  bindMin(()=>renderComing(c));
+}
+function pid(i){const m=S.ds.meta;return `${S.city.code}-${m.track==='asc'?'A':m.track==='dsc'?'D':'O'}-${String(i+1).padStart(5,'0')}`}
+function state(v){return EW()?(v<=-2?'Moving west':v>=2?'Moving east':'Stable (|v| < 2 mm/yr)'):VERT()?(v<=-2?'Sinking':v>=2?'Rising':'Stable (|v| < 2 mm/yr)'):(v<=-2?'Moving away (subsidence)':v>=2?'Moving toward satellite':'Stable (|v| < 2 mm/yr)')}
+function select(i){S.cur=i;drawOverlay();updateCellChip();renderTS()}
+function renderTS(){
+  const el=$('ts'), ds=S.ds, i=S.cur; if(!ds||i<0) return;
+  const collapsed=el.classList.contains('collapsed'), v=V(ds)[i], span=(ds.t[ds.T-1]-ds.t[0])/YR, o=ORT(ds), f=o?1:1/Math.cos(ds.inc[i]*Math.PI/180);
+  const ok=ready(ds,shown()), other=o?(EW()?`Vertical <b>${fmt(ds.vu[i],2)}</b>`:`East–west <b>${fmt(ds.ve[i],2)}</b>`):'';
+  const facts=o?`<span>${other} mm/yr</span><span>Change over record <b>${fmt(v*span,1)} mm</b></span><span>Cell <b>100 × 100 m</b></span><span>Points <b>${ds.na[i]}</b> asc + <b>${ds.nd[i]}</b> dsc</span><span>Ortho · paths ${S.index[S.city.id+'-asc'].path} + ${S.index[S.city.id+'-dsc'].path} · <b>${ds.T}</b> epochs</span>`
+    :`<span>Change over record <b>${fmt(v*span,1)} mm</b></span><span>Fit RMSE <b>${ds.rmse[i].toFixed(1)} mm</b></span><span>Incidence <b>${ds.inc[i].toFixed(1)}°</b></span><span>Resolution cell <b>${cell(ds.inc[i]).rg.toFixed(1)} × ${cell(ds.inc[i]).az.toFixed(1)} m</b></span><span>${TRK(ds.meta.track)} path ${ds.meta.path} · <b>${ds.T}</b> dates</span>`;
+  el.innerHTML=cardHead(pid(i),`<div class="coord" title="Latitude, longitude">${ds.lat[i].toFixed(5)}° N, ${ds.lon[i].toFixed(5)}° E</div>`,
+     `<div class="vel"><span class="num">${fmt(v,2)}</span><span class="unit">mm/yr ${MNAME()}</span><br><span class="pill"><i style="background:${vcolor(v)}"></i>${state(v)}</span></div>`)+
+   `<div class="facts">${facts}</div>
+   <div class="sleg" id="sleg"></div>
+   <div class="chart" id="chart">${ok?'':'<div class="note">Loading time series…</div>'}<div id="ctip" hidden></div></div>
+   <div class="ts-actions">
+     <button class="btn primary" id="pin" ${S.pins.includes(i)||S.pins.length>=3?'disabled':''}>${S.pins.includes(i)?'Pinned':'Pin to compare'}</button>
+     <button class="btn" id="dl" ${ok?'':'disabled'}>Download CSV</button>
+     <button class="btn" id="cp" ${ok?'':'disabled'}>Copy CSV</button>
+     <span class="toast" id="toast">${S.pins.length>=3&&!S.pins.includes(i)?'Up to 3 pinned points':''}</span></div>`;
+  bindMin(renderTS);
+  $('pin').onclick=()=>{if(!S.pins.includes(i)&&S.pins.length<3){S.pins.push(i);drawOverlay();renderTS()}};
+  $('dl').onclick=()=>{const blob=new Blob([csv()],{type:'text/csv'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`${pid(i)}.csv`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),2000)};
+  $('cp').onclick=()=>{navigator.clipboard.writeText(csv()).then(()=>{$('toast').textContent='CSV copied'},()=>{$('toast').textContent='Copy blocked by the browser'})};
+  if(!ok){ensure(ds,shown()).then(()=>{if(S.ds===ds&&S.cur===i)renderTS()},()=>{const c=$('chart');if(c&&S.ds===ds)c.innerHTML='<div class="note">Could not load this time series. Check the connection and click the point again.</div>'});return}
+  if(!collapsed) drawChart();
+}
+function shown(){const ids=[...S.pins]; if(!ids.includes(S.cur)) ids.push(S.cur); return ids}
+function csv(){const ds=S.ds,ids=shown(),ys=ids.map(series);
+  const o=ORT(ds);
+  let s=o?`# Bangladesh Ground Motion Observatory (bGMO), ${S.country.name} / ${S.city.name}, Ortho 100 m cells (ascending + descending), Release 1.0\n# ${MCAP()} displacement in mm on a 12-day grid; velocity in mm/yr\n`
+    :`# Bangladesh Ground Motion Observatory (bGMO), ${S.country.name} / ${S.city.name}, ${ds.meta.track==='asc'?'ascending':'descending'} path ${ds.meta.path}, master ${ds.meta.master}, Release 1.0\n# LOS displacement in mm; velocity in mm/yr\n`;
+  ids.forEach(i=>{s+=o?`# ${pid(i)}: cell centre lat ${ds.lat[i].toFixed(6)}, lon ${ds.lon[i].toFixed(6)}, vertical velocity ${ds.vu[i].toFixed(2)}, east-west velocity ${ds.ve[i].toFixed(2)}, points ${ds.na[i]} asc + ${ds.nd[i]} dsc\n`
+    :`# ${pid(i)}: lat ${ds.lat[i].toFixed(6)}, lon ${ds.lon[i].toFixed(6)}, LOS velocity ${ds.vel[i].toFixed(2)}, incidence ${ds.inc[i].toFixed(2)} deg\n`});
+  s+='date,'+ids.map(pid).join(',')+'\n'; ds.meta.dates.forEach((d,j)=>{s+=d+','+ys.map(y=>y[j].toFixed(1)).join(',')+'\n'}); return s}
+function nice(lo,hi,n){const span=hi-lo,raw=span/n,p=Math.pow(10,Math.floor(Math.log10(raw))),m=raw/p,st=(m<1.5?1:m<3?2:m<7?5:10)*p;const out=[];for(let v=Math.ceil(lo/st)*st;v<=hi+1e-9;v+=st)out.push(+v.toFixed(6));return out}
+function drawChart(){
+  const ds=S.ds, host=$('chart'), ids=shown(), ser=SERIES(), ink=css('--fg');
+  const cols=ids.map(i=>{const k=S.pins.indexOf(i);return k>=0?ser[k]:ink});
+  const ys=ids.map(series), multi=ids.length>1;
+  const sl=$('sleg'); sl.innerHTML=multi?ids.map((i,k)=>`<span><i style="background:${cols[k]}"></i>${pid(i)} ${fmt(V(ds)[i],1)}${S.pins.includes(i)?`<button data-u="${i}" aria-label="Unpin ${pid(i)}">×</button>`:''}</span>`).join(''):'';
+  sl.querySelectorAll('button').forEach(b=>b.onclick=()=>{S.pins=S.pins.filter(x=>x!==+b.dataset.u);drawOverlay();renderTS()});
+  const W=Math.max(300,host.clientWidth-12), H=W<420?190:220, L=40,R=10,T=10,B=24;
+  let lo=Infinity,hi=-Infinity; ys.forEach(y=>y.forEach(v=>{if(v<lo)lo=v;if(v>hi)hi=v})); lo=Math.min(lo,0);hi=Math.max(hi,0); const pad=(hi-lo)*.08||1; lo-=pad;hi+=pad;
+  const t0=ds.t[0],t1=ds.t[ds.T-1], X=t=>L+(t-t0)/(t1-t0)*(W-L-R), Y=v=>T+(hi-v)/(hi-lo)*(H-T-B);
+  const yt=nice(lo,hi,5), yrs=[];for(let y=new Date(t0).getUTCFullYear()+1;y<=new Date(t1).getUTCFullYear();y++)yrs.push(y);
+  const every=W<420&&yrs.length>5?2:1;
+  let s=`<svg viewBox="0 0 ${W} ${H}" id="csvg" role="img" aria-label="${MCAP()} displacement time series in millimetres">`;
+  s+=yt.map(v=>`<line class="${v===0?'zero':'grid'}" x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}"/><text x="${L-6}" y="${Y(v)+3.5}" text-anchor="end">${v===0?'0':fmt(v,Math.abs(v)<1?1:0)}</text>`).join('');
+  s+=yrs.filter((_,k)=>k%every===0).map(y=>{const x=X(Date.UTC(y,0,1));return `<line class="grid" x1="${x}" x2="${x}" y1="${H-B}" y2="${H-B+4}"/><text x="${x}" y="${H-6}" text-anchor="middle">${y}</text>`}).join('');
+  s+=`<text x="${L}" y="${T-1}" style="font-size:10px">mm, ${MNAME()}</text>`;
+  ys.forEach((y,k)=>{const col=cols[k];
+    if(multi) s+=`<polyline fill="none" stroke="${col}" stroke-width="1.5" stroke-linejoin="round" opacity=".85" points="${y.map((v,j)=>X(ds.t[j]).toFixed(1)+','+Y(v).toFixed(1)).join(' ')}"/>`;
+    s+=y.map((v,j)=>`<circle cx="${X(ds.t[j]).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="${multi?1.6:2.3}" fill="${col}" ${multi?'':'opacity=".9"'}/>`).join('')});
+  if(!multi){const f=fitLine(ds.t,ys[0]);s+=`<line class="fit" x1="${X(t0)}" y1="${Y(f.at(t0))}" x2="${X(t1)}" y2="${Y(f.at(t1))}"/>`}
+  s+=`<line class="xh" id="xh" x1="0" x2="0" y1="${T}" y2="${H-B}" visibility="hidden"/><rect x="${L}" y="${T}" width="${W-L-R}" height="${H-T-B}" fill="transparent" id="hit"/></svg>`;
+  const tip=$('ctip'); host.innerHTML=s; host.appendChild(tip);
+  const svg=$('csvg'), xh=$('xh');
+  const move=ev=>{const r=svg.getBoundingClientRect(),sx=(ev.clientX-r.left)*W/r.width; const tm=t0+(sx-L)/(W-L-R)*(t1-t0);
+    let j=0,bd=Infinity; ds.t.forEach((t,k)=>{const d=Math.abs(t-tm);if(d<bd){bd=d;j=k}});
+    const x=X(ds.t[j]); xh.setAttribute('x1',x);xh.setAttribute('x2',x);xh.setAttribute('visibility','visible');
+    tip.hidden=false; tip.innerHTML=`<div class="d">${fdate(ds.t[j])}</div>`+ys.map((y,k)=>`<div>${multi?`<i style="background:${cols[k]}"></i>`:''}${fmt(y[j],1)} mm</div>`).join('');
+    const px=x*r.width/W, hr=host.getBoundingClientRect(), off=r.left-hr.left, tw=tip.offsetWidth;
+    tip.style.left=Math.min(Math.max(4,off+px+(px>r.width/2?-tw-10:10)),hr.width-tw-4)+'px'; tip.style.top='8px'};
+  $('hit').addEventListener('pointermove',move); $('hit').addEventListener('pointerdown',move);
+  $('hit').addEventListener('pointerleave',()=>{tip.hidden=true;xh.setAttribute('visibility','hidden')});
+}
+
+/* ---------- controls ---------- */
+$('tracks').onclick=e=>{const b=e.target.closest('button');if(!b||b.disabled)return;
+  if(S.mode!=='city'||!S.city){ S.pref=b.dataset.t; store.set('gme-pref',S.pref); pressed('tracks',S.pref); setMeasure(S.measure); rerender(); loadOrthoOverview(); return }const k=S.city.datasets.find(k=>S.index[k].track===b.dataset.t);if(k&&(!S.ds||k!==S.ds.key))chooseDataset(k)};
+function rerender(){if(S.mode==='country')renderCountry(); else if(S.ds){renderStats();renderHist([V(S.ds)]);draw();renderTS()}}
+$('clamp').onclick=e=>{const b=e.target.closest('button');if(!b)return;S.clamp=+b.dataset.v;buildLUT();store.set('gme-clamp',S.clamp);pressed('clamp',S.clamp);rerender()};
+function setMeasure(m){
+  const o=PREF_ORT(); m=(m==='vert'||m==='ew'||m==='los')?m:'los';
+  if(o&&m==='los') m='vert'; if(!o) m='los';                      // vertical and east-west only exist in Ortho
+  S.measure=m; store.set('gme-measure',m); pressed('measure',m);
+  $('ms-los').disabled=o; $('ms-vert').disabled=!o; $('ms-ew').disabled=!o;
+  $('leglbl').textContent=EW()?'East–west movement, mm/yr':VERT()?'Vertical movement, mm/yr':'LOS velocity, mm/yr';
+  $('legL').textContent=EW()?'← moving west':VERT()?'← sinking':'← away from satellite (subsidence)'; $('legR').textContent=EW()?'moving east →':VERT()?'rising →':'toward →';
+  $('msnote').textContent=o?(EW()?'Solved from both tracks on a 100 m grid. Positive means moving east. Zoom in to see arrows.':'Solved from both tracks on a 100 m grid, so sideways motion is separated out. Zoom in to see east–west arrows.'):
+    'Raw motion along the radar line of sight. Choose Ortho to see vertical and east–west movement.'}
+$('measure').onclick=e=>{const b=e.target.closest('button');if(!b||b.disabled)return; setMeasure(b.dataset.v); rerender()};
+$('filter').onclick=e=>{const b=e.target.closest('button');if(!b)return;S.filter=b.dataset.v;pressed('filter',S.filter);draw()};
+
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{if(S.mode==="city"&&S.ds&&S.cur>=0&&ready(S.ds,shown())&&!$('ts').classList.contains('collapsed'))drawChart()},120)});
+
+function onTheme(){readRamp(); if(countryLayer) countryLayer.setStyle({color:css('--faint'),fillColor:css('--bound')});
+  if(S.base) setBase(S.base); if(!S.country) return; refreshBoundaries(); rerender(); renderBaselines()}
+try{ matchMedia('(prefers-color-scheme: light)').addEventListener('change',onTheme) }catch(e){}
+try{ new MutationObserver(onTheme).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']}) }catch(e){}
+
+/* side panel: drag the divider to resize (260–640 px), double-click to reset, menu button to hide */
+(()=>{
+  const app=$('app'), rz=$('resizer'), MIN=260, DEF=340, max=()=>Math.max(MIN,Math.min(640,window.innerWidth*0.6));
+  const setW=w=>{w=Math.round(Math.max(MIN,Math.min(max(),w))); app.style.setProperty('--sidew',w+'px'); rz.setAttribute('aria-valuenow',w); return w};
+  setW(+(store.get('gme-sidew')||DEF));
+  let x0=0,w0=0;
+  rz.addEventListener('pointerdown',e=>{x0=e.clientX; w0=$('side').getBoundingClientRect().width; rz.setPointerCapture(e.pointerId); rz.classList.add('drag'); document.body.classList.add('resizing')});
+  rz.addEventListener('pointermove',e=>{if(!rz.classList.contains('drag'))return; setW(w0+e.clientX-x0)});
+  const end=()=>{if(!rz.classList.contains('drag'))return; rz.classList.remove('drag'); document.body.classList.remove('resizing'); store.set('gme-sidew',parseInt(app.style.getPropertyValue('--sidew')))};
+  rz.addEventListener('pointerup',end); rz.addEventListener('pointercancel',end);
+  rz.addEventListener('dblclick',()=>{store.set('gme-sidew',setW(DEF))});
+  rz.addEventListener('keydown',e=>{const w=$('side').getBoundingClientRect().width; if(e.key==='ArrowLeft'){store.set('gme-sidew',setW(w-20));e.preventDefault()} if(e.key==='ArrowRight'){store.set('gme-sidew',setW(w+20));e.preventDefault()}});
+  const tg=$('navtoggle'), setHidden=h=>{app.classList.toggle('collapsed',h); tg.setAttribute('aria-expanded',String(!h)); const t=h?'Show side panel':'Hide side panel'; tg.setAttribute('aria-label',t); tg.title=t; store.set('gme-side-hidden',h?'1':'')};
+  tg.addEventListener('click',()=>setHidden(!app.classList.contains('collapsed')));
+  if(store.get('gme-side-hidden')==='1') setHidden(true);
+  window.addEventListener('resize',()=>setW($('side').getBoundingClientRect().width||DEF));
+  $('home').addEventListener('click',e=>{e.preventDefault(); if(S.country) chooseCountry(S.country.id)});
+})();
+
+/* ---------- boot ---------- */
+(async()=>{
+  readRamp();
+  S.pref=store.get('gme-pref')||'dsc';
+  S.clamp=+(store.get('gme-clamp')||5); pressed('clamp',S.clamp); pressed('filter','all'); setMeasure(store.get('gme-measure')||'los');
+  setBase('sat');
+  try{
+    const [cat,idx,gj]=await Promise.all(['catalog.json','index.json','boundaries.geojson'].map(f=>fetch(DATA+f).then(r=>{if(!r.ok)throw new Error(f);return r.json()})));
+    S.catalog=cat; idx.forEach(d=>{d.T=d.dates.length;S.index[d.key]=d}); loadOverview().catch(()=>{}); buildBoundaries(gj);
+  }catch(e){$('loading').textContent='Could not load the data catalog ('+e.message+').';return}
+  buildCountries(); S.country=S.catalog.countries[0]; renderMethodTable(); renderApps();
+  $('about').addEventListener('toggle',()=>{if($('about').open&&$('bl').dataset.stale!=='')renderBaselines()});
+  const h=(location.hash||'').slice(1);
+  S.country=S.catalog.countries[0];
+  const city=S.country.cities.find(c=>c.id===h||c.datasets.includes(h));
+  if(city){S.country=S.catalog.countries.find(c=>c.cities.includes(city));buildCities();
+    await chooseCity(city.id,S.index[h]?S.index[h].track:undefined);
+    loadOverview().catch(()=>{});
+  } else await chooseCountry((S.catalog.countries.find(c=>c.id===h)||S.country).id);
+  // after the first view is up, quietly fetch every city's points for the chosen product, one file at a time
+  setTimeout(async()=>{ for(const c of S.country.cities){ const t=c.datasets.map(k=>S.index[k]).find(d=>d.track===(S.pref||'dsc'));
+    if(t&&!S.cache[t.key]) await loadPoints(t.key,true).catch(()=>{}) } },1500);
+})();
+})();
+</script>
+
+
+</body>
+</html>
