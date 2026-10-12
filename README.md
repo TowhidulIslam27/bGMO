@@ -3,7 +3,7 @@
 bGMO is a web map of land movement in six cities of Bangladesh: Dhaka, Chattogram,
 Khulna, Barishal, Sylhet and Cumilla. It is built from Sentinel-1 radar images
 processed with PS-InSAR, covering 2016 to 2024 depending on the city. The map is online
-at [bmgo.sarsense.com](https://bmgo.sarsense.com).
+at [bgmo.sarsense.com](https://bgmo.sarsense.com).
 
 ![The bGMO map with Dhaka loaded and one point's time series open](docs/img/bgmo-map.jpg)
 
@@ -93,7 +93,7 @@ http://localhost:8000. To put it online, copy the contents of `web/` to any web 
 
 Bangladesh Ground Motion Observatory (bGMO) (2026). PS-InSAR ground motion for the
 cities of Bangladesh, Release 1.0. SAR.Sense Geointelligence Lab.
-https://bmgo.sarsense.com. Contains modified Copernicus Sentinel-1 data (2016–2024).
+https://bgmo.sarsense.com. Contains modified Copernicus Sentinel-1 data (2016–2024).
 
 ## Licence and use
 

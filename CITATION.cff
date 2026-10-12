@@ -5,7 +5,7 @@ version: "1.0"
 date-released: "2026-10-12"
 authors:
   - name: "SAR.Sense Geointelligence Lab"
-url: "https://bmgo.sarsense.com"
+url: "https://bgmo.sarsense.com"
 repository-code: "https://github.com/TowhidulIslam27/bGMO"
 license: MIT
 keywords:
