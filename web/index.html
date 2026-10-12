@@ -767,6 +767,9 @@ function applySwipe(){
   if(!open) $('tip').hidden=true;
 }
 map.on('move',applySwipe);
+// on phones the time-series card covers the lower part of the map, so frame the data in the part left above it
+function fitView(b,pad){ const narrow=matchMedia('(max-width:780px)').matches, h=map.getSize().y;
+  map.fitBounds(b,{paddingTopLeft:[pad,pad+(narrow?40:0)],paddingBottomRight:[pad,pad+(narrow?Math.round(h*0.46):0)],animate:false}) }
 (()=>{
   const kn=$('swipeknob'), hit=$('swipehit'), wrap=document.querySelector('.mapwrap');
   const set=v=>{S.swipe=Math.max(0,Math.min(1,v)); if(S.swipe>0.985) S.swipe=1; applySwipe()};
@@ -805,7 +808,7 @@ map.on('resize',draw);
 try{ let rz=0, last=null; new ResizeObserver(()=>{cancelAnimationFrame(rz); rz=requestAnimationFrame(()=>{
   map.invalidateSize({animate:false});                    // keeps the centre in place
   const sz=map.getSize(), big=last&&(Math.abs(sz.x-last.x)>80||Math.abs(sz.y-last.y)>80); last=sz;
-  if(big&&S.mode==='country'&&S.country){const b=S.country.bounds; map.fitBounds([[b[1],b[0]],[b[3],b[2]]],{padding:[20,20],animate:false})}
+  if(big&&S.mode==='country'&&S.country){const b=S.country.bounds; fitView([[b[1],b[0]],[b[3],b[2]]],20)}
   draw()})}).observe(document.querySelector('.mapwrap')) }catch(e){}
 map.on('click',e=>{
   if(S.mode==='country'){ // click near a city opens it
@@ -947,7 +950,7 @@ async function chooseCountry(id){
   S.mode='country'; S.city=null; S.ds=null; S.cur=-1; S.pins=[];
   buildCities(); pressed('cities',''); setHash(S.country.id);
   $('trk-asc').disabled=$('trk-dsc').disabled=$('trk-ort').disabled=false; pressed('tracks',S.pref); setMeasure(S.measure);
-  const b=S.country.bounds; map.fitBounds([[b[1],b[0]],[b[3],b[2]]],{padding:[20,20],animate:false});
+  const b=S.country.bounds; fitView([[b[1],b[0]],[b[3],b[2]]],20);
   refreshBoundaries(); crumbs(); renderCountry(); $('loading').hidden=true;
   await Promise.all([loadOverview().catch(()=>null),loadOrthoOverview()]);
   if(S.mode==='country'){draw();renderCountry()}
@@ -959,11 +962,11 @@ async function chooseCity(id,track){
   // switch at once: clear the old selection, frame the city, and show the light overview sample while full points load
   S.mode='city'; S.city=c; S.ds=null; S.cur=-1; S.pins=[]; S.hover=-1; pressed('cities',id);
   S.preview=(want0==='ortho'&&S.cache[c.id+'-ortho'])||(OV&&OV.data&&OV.data[c.id])||null;
-  if(target&&!S.cache[target.key]){const b=target.bounds; map.fitBounds([[b[1],b[0]],[b[3],b[2]]],{padding:[30,30],animate:false}); refreshBoundaries(); crumbs(); draw()}
+  if(target&&!S.cache[target.key]){const b=target.bounds; fitView([[b[1],b[0]],[b[3],b[2]]],30); refreshBoundaries(); crumbs(); draw()}
   $('trk-asc').disabled=!sets.some(d=>d.track==='asc'); $('trk-dsc').disabled=!sets.some(d=>d.track==='dsc'); $('trk-ort').disabled=!sets.some(d=>d.track==='ortho');
   if(!sets.length){
     S.ds=null;S.cur=-1;S.pins=[]; pressed('tracks',''); setHash(id);
-    const bb=S.bounds[id]; if(bb) map.fitBounds(bb.b,{padding:[30,30],animate:false});
+    const bb=S.bounds[id]; if(bb) fitView(bb.b,30);
     refreshBoundaries(); crumbs(); renderStatsEmpty(c); renderHist([]); renderBaselines(); renderComing(c); draw(); return }
   const want=track||S.pref||(S.ds&&S.ds.meta.track)||'dsc';
   const m=sets.find(d=>d.track===want)||sets[0];
@@ -979,7 +982,7 @@ async function chooseDataset(key){
   catch(err){if(S.req===key) $('loading').textContent='Could not load '+key+'. Check the connection and choose the city again.';return}
   if(S.req!==key) return;                    // a newer choice has been made meanwhile
   S.cur=-1; S.preview=null; S.ds=ds;S.pins=[];S.hover=-1; S.pref=ds.meta.track; store.set('gme-pref',S.pref); pressed('tracks',ds.meta.track); setHash(key); setMeasure(S.measure);
-  const b=ds.meta.bounds; map.fitBounds([[b[1],b[0]],[b[3],b[2]]],{padding:[30,30],animate:false});
+  const b=ds.meta.bounds; fitView([[b[1],b[0]],[b[3],b[2]]],30);
   refreshBoundaries(); crumbs(); renderStats(); renderHist([V(ds)]); renderBaselines();
   const mi=first;   // open on the fastest-subsiding point (precomputed)
   $('loading').hidden=true; S.cur=mi; draw(); renderTS();
