@@ -153,10 +153,8 @@ touch and I will share it privately.
 
 ## About me
 
-I am **Towhidul Islam**, a geospatial researcher at the Department of Geography and
-Environmental Studies, University of Chittagong, and founder of SAR.Sense
-Geointelligence Lab. I work on InSAR, land subsidence and climate hazards in the
-Bengal delta.
+I am **Towhidul Islam**, Founder and Director of SAR.Sense Geointelligence Lab. I work
+on InSAR, land subsidence and climate hazards in the Bengal delta.
 
 - Portfolio: [towhidulislam27.github.io](https://towhidulislam27.github.io)
 - GitHub: [@TowhidulIslam27](https://github.com/TowhidulIslam27)

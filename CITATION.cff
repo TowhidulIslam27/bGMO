@@ -6,7 +6,7 @@ date-released: "2026-10-12"
 authors:
   - family-names: "Islam"
     given-names: "Towhidul"
-    affiliation: "Department of Geography and Environmental Studies, University of Chittagong; SAR.Sense Geointelligence Lab"
+    affiliation: "SAR.Sense Geointelligence Lab"
   - name: "SAR.Sense Geointelligence Lab"
 url: "https://bgmo.sarsense.com"
 repository-code: "https://github.com/TowhidulIslam27/bGMO"
