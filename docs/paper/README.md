@@ -4,8 +4,7 @@
 **Author:** Towhidul Islam, Founder and Director, SAR.Sense Geointelligence Lab
 
 > The figures on this page are previews of a paper that has not been published yet.
-> They are reduced in resolution, watermarked, and the numbers on the maps are
-> hidden. Please don't reuse or cite them. The full draft and the analysis code can be
+> They are reduced in resolution and watermarked. Please don't reuse or cite them. The full draft and the analysis code can be
 > shared privately on request.
 
 ## What the paper is about
@@ -64,9 +63,35 @@ persistent scatterers per 100 m cell in Dhaka (b), Khulna (c) and Chattogram (d)
 *Vertical velocity from combining the ascending and descending tracks, 2017–2023.
 Negative values are subsidence. Summary statistics are withheld until publication.*
 
+## How the subsidence developed over time
+
+![Space-time evolution of vertical displacement](fig3_spacetime_evolution.jpg)
+
+*Top row: median cumulative vertical displacement of the fastest-subsiding 5 % of
+cells and of the middle 5 % (IQR shaded; blue bands are the June–September monsoon).
+Bottom row: cumulative displacement of every cell since October 2017, ranked by
+vertical velocity with the fastest subsidence at the top.*
+
+## Full window against the recent window
+
+![Rates in the full and recent windows, and vertical acceleration](fig4_rate_change.jpg)
+
+*Top row: vertical velocity fitted over the full window (2017–2023) against the recent
+window (2020–2023). Bottom row: vertical acceleration from a quadratic-plus-annual
+model against vertical velocity; coloured points are significant at 2σ.*
+
+## Geology and urban load
+
+![Ground motion by geological unit and urban load](fig5_geology_load.jpg)
+
+*Top: surface geology (GSB 1:1,000,000 map) with the cells subsiding faster than
+5 mm/yr. Middle: vertical velocity by geological unit in the full and recent windows.
+Bottom: median vertical velocity against building footprint density and against mean
+building height (GHSL 2018), per unit.*
+
 ## What's not here yet
 
-The quantitative results, the remaining figures and the analysis code will be added
+The full results, the remaining figures and the analysis code will be added
 to this repository when the paper is published. Until then, the bGMO map at
 [bgmo.sarsense.com](https://bgmo.sarsense.com) shows the underlying Release 1.0 data
 for all six processed cities.
