@@ -108,8 +108,8 @@ Ortho results, in mm/yr (east is positive):
   4. `04_ortho_decomposition.py` combines the two tracks into vertical and east-west motion.
 - `web/` is the whole website. It is plain HTML with no build step, and `web/data/`
   holds the published layers.
-- `docs/` has the [method](docs/methodology.md) and a description of the
-  [data files](docs/data_format.md).
+- `docs/` has the [method](docs/methodology.md), a description of the
+  [data files](docs/data_format.md) and a [preview of the paper](docs/paper/README.md).
 
 ## Running it again
 
@@ -146,8 +146,9 @@ distorts vertical rates, checks the InSAR against continuous GNSS, tests the rol
 surface geology and urban load, and works out which buildings, roads and strategic
 assets sit on fast-subsiding ground.
 
-The analysis code, figures and numbers behind the paper are kept out of this
-repository until it is published. If you are reviewing my work (for example as a
+A short overview with the study design, the workflow and preview figures is on the
+[paper page](docs/paper/README.md). The analysis code, the full figures and the
+numbers behind the paper are kept out of this repository until it is published. If you are reviewing my work (for example as a
 prospective supervisor) and would like to see the draft or the code, please get in
 touch and I will share it privately.
 
