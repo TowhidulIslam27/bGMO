@@ -1,7 +1,7 @@
 # Ground motion and infrastructure exposure in Bangladesh's three largest cities from multi-geometry PS-InSAR
 
 **Status:** manuscript in preparation (working title)
-**Author:** Towhidul Islam, Founder and Director, SAR.Sense Geointelligence Lab
+**Lead author:** Towhidul Islam, Founder and Director, SAR.Sense Geointelligence Lab
 
 > The figures on this page are previews of a paper that has not been published yet.
 > They are reduced in resolution and watermarked. Please don't reuse or cite them.
