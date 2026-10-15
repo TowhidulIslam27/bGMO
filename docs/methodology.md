@@ -1,7 +1,7 @@
 # Method
 
 This is the method behind bGMO Release 1.0. A shorter version is in the Methodology
-section of the [map](https://bmgo.sarsense.com).
+section of the [map](https://bgmo.sarsense.com).
 
 ## Images
 

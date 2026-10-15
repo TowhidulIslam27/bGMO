@@ -19,7 +19,7 @@ Velocity is the least-squares slope through all epochs including the master;
 RMSE is the scatter about that line.
 
 Usage:
-  python 03_build_web_data.py --results D:/Deform_paper/Results --out ../web/data [tag ...]
+  python 03_build_web_data.py --results /path/to/Results --out ../web/data [tag ...]
 Run 04_ortho_decomposition.py afterwards to add the Ortho datasets.
 """
 import argparse, base64, csv, json, math, os, re, datetime as dt

@@ -10,7 +10,7 @@ Output: <results>/TS_txt/TS_<pass>_<city>_ps.txt
   columns lon, lat, [vel_mm_yr], then one column per acquisition date (ISO),
   values are LOS displacement in mm relative to the master date.
 
-Usage:  python 01_stamps_csv_to_txt.py --results D:/Deform_paper/Results [tag ...]
+Usage:  python 01_stamps_csv_to_txt.py --results /path/to/Results [tag ...]
 """
 import argparse, csv, datetime as dt, os
 from config import EXPORTS

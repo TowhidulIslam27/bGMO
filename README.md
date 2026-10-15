@@ -1,15 +1,58 @@
-# bGMO: Bangladesh Ground Motion Observatory
+<p align="center">
+  <img src="web/assets/bgmo-logo.png" alt="bGMO" width="240">
+</p>
 
-bGMO is a web map of land movement in six cities of Bangladesh: Dhaka, Chattogram,
-Khulna, Barishal, Sylhet and Cumilla. It is built from Sentinel-1 radar images
-processed with PS-InSAR, covering 2016 to 2024 depending on the city. The map is online
-at [bmgo.sarsense.com](https://bmgo.sarsense.com).
+<p align="center">
+  <b>Bangladesh Ground Motion Observatory</b><br>
+  PS-InSAR land subsidence and ground motion for six cities of Bangladesh, from Sentinel-1 (2016–2024)
+</p>
+
+<p align="center">
+  <a href="https://bgmo.sarsense.com"><img alt="Live map" src="https://img.shields.io/badge/live%20map-bgmo.sarsense.com-1f6feb"></a>
+  <img alt="Release" src="https://img.shields.io/badge/release-1.0-informational">
+  <a href="LICENSE"><img alt="Code: MIT" src="https://img.shields.io/badge/code-MIT-green"></a>
+  <img alt="Data: CC BY 4.0" src="https://img.shields.io/badge/data-CC%20BY%204.0-lightgrey">
+  <img alt="Sentinel-1" src="https://img.shields.io/badge/data-Copernicus%20Sentinel--1-0b3d91">
+</p>
+
+---
+
+bGMO is an open web map of how the ground is moving under Dhaka, Chattogram, Khulna,
+Barishal, Sylhet and Cumilla. I processed twelve Sentinel-1 stacks (one ascending and
+one descending per city) with persistent scatterer interferometry, and the map lets
+you click any of the ~275,000 points or ~29,000 grid cells and see its full
+displacement history. It is online at **[bgmo.sarsense.com](https://bgmo.sarsense.com)**.
 
 ![The bGMO map with Dhaka loaded and one point's time series open](docs/img/bgmo-map.jpg)
 
-This repository has the scripts I used to go from the StaMPS results to the files the
-map reads, the website itself, and notes on the method. It is Release 1.0 (October
-2026), developed at SAR.Sense Geointelligence Lab.
+This repository holds the scripts that take the StaMPS results to the files the map
+reads, the website itself, and notes on the method. It is Release 1.0 (October 2026),
+developed at SAR.Sense Geointelligence Lab.
+
+## At a glance
+
+- **12 Sentinel-1 IW stacks**, 151–218 scenes each, 2016 to 2024 depending on the city
+- **~275,000 persistent scatterers** with LOS velocity, fit scatter, incidence angle and full time series
+- **Two-geometry decomposition** into vertical and east–west motion on a 100 m grid, every 12 days
+- **Per-point incidence angles** worked out from the real SLC frame footprints rather than a scene-centre value
+- **No build step**: the site is a single HTML page that rebuilds a cell's time series in the browser from its member points, and matches the Python reference to 0.1 mm
+
+## How it fits together
+
+```mermaid
+flowchart LR
+    A[Sentinel-1 IW SLC<br/>asc + dsc] --> B[SNAP<br/>coregistration,<br/>interferograms]
+    B --> C[StaMPS<br/>PS selection,<br/>LOS time series]
+    C --> D[01 CSV to text<br/>date checks]
+    D --> E[02 incidence angle<br/>per point]
+    E --> F[03 web layers<br/>points + series]
+    E --> G[04 Ortho<br/>vertical + east-west]
+    F --> H[(web/data)]
+    G --> H
+    H --> I[bgmo.sarsense.com]
+```
+
+Steps A–C were run outside this repository; everything from step 01 on is here.
 
 ## What the map shows
 
@@ -89,11 +132,40 @@ a little each run.
 To look at the site locally, run `python -m http.server 8000` inside `web/` and open
 http://localhost:8000. To put it online, copy the contents of `web/` to any web server.
 
+## Related research
+
+A journal paper built on the same processing is in preparation. It narrows the work
+to the three largest cities, which sit on three very different kinds of ground, and
+puts them on one common observation window so they can be compared directly:
+
+> **Ground motion and infrastructure exposure in Bangladesh's three largest cities
+> from multi-geometry PS-InSAR** (working title). T. Islam et al., in preparation.
+
+Besides the ground-motion maps, the paper looks at how much a single viewing geometry
+distorts vertical rates, checks the InSAR against continuous GNSS, tests the role of
+surface geology and urban load, and works out which buildings, roads and strategic
+assets sit on fast-subsiding ground.
+
+The analysis code, figures and numbers behind the paper are kept out of this
+repository until it is published. If you are reviewing my work (for example as a
+prospective supervisor) and would like to see the draft or the code, please get in
+touch and I will share it privately.
+
+## About me
+
+I am **Towhidul Islam**, a geospatial researcher at the Department of Geography and
+Environmental Studies, University of Chittagong, and founder of SAR.Sense
+Geointelligence Lab. I work on InSAR, land subsidence and climate hazards in the
+Bengal delta.
+
+- Portfolio: [towhidulislam27.github.io](https://towhidulislam27.github.io)
+- GitHub: [@TowhidulIslam27](https://github.com/TowhidulIslam27)
+
 ## Citing
 
 Bangladesh Ground Motion Observatory (bGMO) (2026). PS-InSAR ground motion for the
 cities of Bangladesh, Release 1.0. SAR.Sense Geointelligence Lab.
-https://bmgo.sarsense.com. Contains modified Copernicus Sentinel-1 data (2016–2024).
+https://bgmo.sarsense.com. Contains modified Copernicus Sentinel-1 data (2016–2024).
 
 ## Licence and use
 

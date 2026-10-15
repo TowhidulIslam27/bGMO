@@ -6,3 +6,9 @@ Thumbs.db
 Results/
 TS_txt/
 TS_vertical/
+
+# unpublished journal work stays local until the paper is out
+paper/
+private/
+manuscript*
+*_paper*

@@ -13,7 +13,7 @@ two-track Ortho product (step 4) removes that assumption.
 Output: <results>/TS_vertical/TS_<tag>_vert.txt
   columns lon, lat, inc_deg, vel_v_mm_yr, [vel_los_stamps_mm_yr], dates...
 
-Usage:  python 02_los_to_vertical.py --results D:/Deform_paper/Results [tag ...]
+Usage:  python 02_los_to_vertical.py --results /path/to/Results [tag ...]
 """
 import argparse, datetime as dt, os
 import numpy as np, pandas as pd
