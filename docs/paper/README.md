@@ -4,8 +4,8 @@
 **Author:** Towhidul Islam, Founder and Director, SAR.Sense Geointelligence Lab
 
 > The figures on this page are previews of a paper that has not been published yet.
-> They are reduced in resolution and watermarked. Please don't reuse or cite them. The full draft and the analysis code can be
-> shared privately on request.
+> They are reduced in resolution and watermarked. Please don't reuse or cite them.
+> The full draft and the analysis code can be shared privately on request.
 
 ## What the paper is about
 
