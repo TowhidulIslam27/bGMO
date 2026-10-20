@@ -29,13 +29,16 @@ This repository holds the scripts that take the StaMPS results to the files the 
 reads, the website itself, and notes on the method. It is Release 1.0 (October 2026),
 developed at SAR.Sense Geointelligence Lab.
 
-## At a glance
+## In short
 
-- **12 Sentinel-1 IW stacks**, 151–218 scenes each, 2016 to 2024 depending on the city
-- **~275,000 persistent scatterers** with LOS velocity, fit scatter, incidence angle and full time series
-- **Two-geometry decomposition** into vertical and east–west motion on a 100 m grid, every 12 days
-- **Per-point incidence angles** worked out from the real SLC frame footprints rather than a scene-centre value
-- **No build step**: the site is a single HTML page that rebuilds a cell's time series in the browser from its member points, and matches the Python reference to 0.1 mm
+Each city has two Sentinel-1 IW stacks of 151 to 218 scenes, between 2016 and 2024 depending
+on the city. Together they give about 275,000 persistent scatterers, each with its line-of-sight
+velocity, the scatter of the fit, an incidence angle and a full time series. Where both tracks
+overlap, I combine them into vertical and east-west motion on a 100 m grid, with an epoch every
+12 days. The incidence angle of each point is worked out from the real SLC frame footprint rather
+than taken as one value for the whole scene. There is no build step: the site is a single HTML
+page that rebuilds a cell's time series in the browser from its member points, and it matches
+the Python version to within 0.1 mm.
 
 ## How it fits together
 
@@ -148,9 +151,9 @@ assets sit on fast-subsiding ground.
 
 A short overview with the study design, the workflow and preview figures is on the
 [paper page](docs/paper/README.md). The analysis code, the full figures and the
-numbers behind the paper are kept out of this repository until it is published. If you are reviewing my work (for example as a
-prospective supervisor) and would like to see the draft or the code, please get in
-touch and I will share it privately.
+numbers behind the paper are kept out of this repository until it is published. If you
+are reviewing my work, for example as a prospective supervisor, and would like to see the
+draft or the code, get in touch and I'll share it privately.
 
 ## About me
 

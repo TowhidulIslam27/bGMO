@@ -20,15 +20,15 @@ standing on it.
 It starts from the same Sentinel-1 processing as the bGMO map, but goes further in
 four directions:
 
-1. **Validation.** The InSAR rates are compared with continuous GNSS stations from the
+1. Validation: the InSAR rates are compared with continuous GNSS stations from the
    Nevada Geodetic Laboratory, which also gives the absolute rate of each city's
    reference ground.
-2. **Ground motion.** Vertical and east–west rates with realistic (autocorrelation-corrected)
+2. Ground motion: vertical and east–west rates with realistic (autocorrelation-corrected)
    uncertainties, subsidence hotspots, profiles across the main bowls, and how the
    rates changed during the period.
-3. **Geology and urban load.** Whether surface geology, building density or building
+3. Geology and urban load: whether surface geology, building density or building
    height explain where the ground subsides fastest.
-4. **Infrastructure exposure.** Buildings, roads, critical facilities and strategic
+4. Infrastructure exposure: buildings, roads, critical facilities and strategic
    assets on subsiding ground, differential settlement against damage limits, and
    where new construction has gone since 2016.
 
