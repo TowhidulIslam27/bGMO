@@ -1,7 +1,8 @@
 # Web data format
 
-All files live in `web/data/`. Binary arrays are little-endian and stored as base64
-text (`*.b64.txt`) so they can be served by any static host. Decode with:
+All files live in `web/data/`. I stored the binary arrays as little-endian values in
+base64 text (`*.b64.txt`) so that any static host can serve them. To read them back I
+use:
 
 ```python
 import base64, numpy as np

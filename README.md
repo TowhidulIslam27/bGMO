@@ -55,7 +55,7 @@ flowchart LR
     H --> I[bgmo.sarsense.com]
 ```
 
-Steps A–C were run outside this repository; everything from step 01 on is here.
+I ran steps A–C outside this repository; everything from step 01 on is here.
 
 ## What the map shows
 
@@ -103,21 +103,21 @@ Ortho results, in mm/yr (east is positive):
 
 ## Folders
 
-- `processing/` has the four scripts, run in order, plus `config.py` with the master
-  dates, orbit paths and Sentinel-1 frame footprints.
+- In `processing/` I keep the four scripts, in the order I run them, plus `config.py`
+  with the master dates, orbit paths and Sentinel-1 frame footprints.
   1. `01_stamps_csv_to_txt.py` converts the StaMPS CSV exports to tab-separated text.
   2. `02_los_to_vertical.py` works out the incidence angle of every point.
   3. `03_build_web_data.py` packs the points and time series into the files the map loads.
   4. `04_ortho_decomposition.py` combines the two tracks into vertical and east-west motion.
-- `web/` is the whole website. It is plain HTML with no build step, and `web/data/`
-  holds the published layers.
-- `docs/` has the [method](docs/methodology.md), a description of the
+- `web/` is the whole website. I wrote it as plain HTML with no build step, and
+  `web/data/` holds the published layers.
+- In `docs/` I put the [method](docs/methodology.md), a description of the
   [data files](docs/data_format.md) and a [preview of the paper](docs/paper/README.md).
 
 ## Running it again
 
-The raw StaMPS exports are about 0.8 GB, so they are not in the repository. With them
-in one folder, the steps are:
+The raw StaMPS exports are about 0.8 GB, so I haven't put them in the repository. When I
+rerun everything, I keep them in one folder and run:
 
 ```bash
 pip install -r processing/requirements.txt
@@ -128,12 +128,12 @@ python 03_build_web_data.py      --results /path/to/Results --out ../web/data
 python 04_ortho_decomposition.py --data ../web/data
 ```
 
-This gives the same files that are in `web/data/`. The one exception is
-`overview.b64.txt`, a random sample of points used for the country view, which changes
-a little each run.
+This reproduces the files in `web/data/`, apart from `overview.b64.txt`. That one is a
+random sample of points for the country view, so it changes a little each time I run it.
 
-To look at the site locally, run `python -m http.server 8000` inside `web/` and open
-http://localhost:8000. To put it online, copy the contents of `web/` to any web server.
+To check the site locally I run `python -m http.server 8000` inside `web/` and open
+http://localhost:8000. The site is static, so putting it online only means copying the
+contents of `web/` to a web server.
 
 ## Related research
 
